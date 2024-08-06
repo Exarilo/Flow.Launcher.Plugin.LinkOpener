@@ -1,0 +1,12 @@
+{
+  "ID": "4905edc2-7feb-4036-bfae-b06efc60c879",
+  "ActionKeyword": "*",
+  "Name": "LinkOpener",
+  "Description": "Allows you to open URLs using keywords set in the settings",
+  "Author": "Exarilo",
+  "Version": "1.0.0",
+  "Language": "csharp",
+  "Website": "https://github.com/Exarilo/Flow.Launcher.Plugin.LinkOpener",
+  "IcoPath": "Images\\app.png",
+  "ExecuteFileName": "Flow.Launcher.Plugin.LinkOpener.dll"
+}
