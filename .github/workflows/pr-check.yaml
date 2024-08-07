@@ -6,7 +6,8 @@ on:
       - '*'  # Trigger on push events for all branches
   pull_request:
     branches:
-      - '*'  # Trigger on push events for all branches
+      - '*'  # Trigger on pull request events for all branches
+  workflow_dispatch:  # Trigger for manual runs
 
 jobs:
   build-and-test:
