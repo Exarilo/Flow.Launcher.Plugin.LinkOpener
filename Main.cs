@@ -54,7 +54,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             string arg = query.SecondSearch?.Trim();
 
             var filteredItems = settingsItems
-                .Where(item => keyword.StartsWith(item.Keyword.Trim()) && (string.IsNullOrEmpty(arg) || item.Title.Contains(arg, StringComparison.OrdinalIgnoreCase)));
+                .Where(item => keyword.StartsWith(item.Keyword.Trim(), StringComparison.OrdinalIgnoreCase) && (string.IsNullOrEmpty(arg) || item.Title.Contains(arg, StringComparison.OrdinalIgnoreCase)));
 
             foreach (var item in filteredItems)
             {
