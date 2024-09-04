@@ -32,13 +32,12 @@
   <Grid Margin="20">
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-
-    <Border Grid.Row="1" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5" Height="300">
-      <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <Border Grid.Row="1" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5">
+      <ScrollViewer VerticalScrollBarVisibility="Auto" CanContentScroll="True">
         <DataGrid x:Name="dataGrid"
                   AutoGenerateColumns="False"
                   ItemsSource="{Binding SettingsItems}"
@@ -60,11 +59,17 @@
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate>
                   <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Image Source="{Binding IconPath}" Width="24" Height="24" Margin="0,0,5,0" Stretch="Uniform"/>
+                    <Image Source="{Binding IconPath}"
+                           Width="24"
+                           Height="24"
+                           Margin="0,0,5,0"
+                           Stretch="Uniform"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
                     <Button Content="..."
                             Command="{Binding DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             CommandParameter="{Binding}"
-                            Width="24" Height="24"
+                            Width="24"
+                            Height="24"
                             Padding="0"
                             Margin="0,0,5,0"/>
                   </StackPanel>
