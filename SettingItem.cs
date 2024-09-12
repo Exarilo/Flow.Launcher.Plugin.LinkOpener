@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
-using System.Windows;
 
 namespace Flow.Launcher.Plugin.LinkOpener
 {
@@ -10,6 +9,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
         private string title;
         private string url;
         private string iconPath;
+        private bool addToBulkOpenUrls;
 
         [JsonPropertyName("Keyword")]
         public string Keyword
@@ -66,6 +66,21 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 }
             }
         }
+
+        [JsonPropertyName("AddToBulkOpenUrls")]
+        public bool AddToBulkOpenUrls
+        {
+            get => addToBulkOpenUrls;
+            set
+            {
+                if (addToBulkOpenUrls != value)
+                {
+                    addToBulkOpenUrls = value;
+                    OnPropertyChanged(nameof(AddToBulkOpenUrls));
+                }
+            }
+        }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
 

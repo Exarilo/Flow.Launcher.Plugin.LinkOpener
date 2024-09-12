@@ -31,12 +31,13 @@
 
   <Grid Margin="20">
     <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
+      <!-- Ligne pour le tableau -->
       <RowDefinition Height="Auto" />
+      <!-- Ligne pour la case à cocher -->
     </Grid.RowDefinitions>
 
-    <Border Grid.Row="1" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5">
+    <Border Grid.Row="0" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5">
       <ScrollViewer VerticalScrollBarVisibility="Auto" CanContentScroll="True">
         <DataGrid x:Name="dataGrid"
                   AutoGenerateColumns="False"
@@ -80,5 +81,15 @@
         </DataGrid>
       </ScrollViewer>
     </Border>
+
+    <CheckBox x:Name="bulkOpenCheckBox"
+              Grid.Row="1"
+              Content="Add additional results to bulk open URLs for items with the same keyword"
+              IsChecked="{Binding AddToBulkOpenUrls, UpdateSourceTrigger=PropertyChanged}"
+              VerticalAlignment="Bottom"
+              HorizontalAlignment="Left"
+              Margin="10"
+              Click="OnCheckBoxClicked" />
+
   </Grid>
 </UserControl>

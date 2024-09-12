@@ -9,11 +9,11 @@ using Microsoft.Win32;
 using System.ComponentModel;
 using System.Linq;
 
-
 namespace Flow.Launcher.Plugin.LinkOpener
 {
-    public partial class LinkSettings : UserControl
+    public partial class LinkSettings : UserControl, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
         public PluginInitContext Context { get; private set; }
 
         string SettingsPath => Path.Combine(
@@ -23,7 +23,22 @@ namespace Flow.Launcher.Plugin.LinkOpener
             "Flow.Launcher.Plugin.LinkOpener",
             "Settings.json"
         );
-
+        
+        protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+ 
+        private bool addToBulkOpenUrls;
+        public bool AddToBulkOpenUrls
+        {
+            get => addToBulkOpenUrls;
+            set
+            {
+                if (addToBulkOpenUrls != value)
+                {
+                    addToBulkOpenUrls = value;
+                    OnPropertyChanged(nameof(AddToBulkOpenUrls));
+                }
+            }
+        }
         public ObservableCollection<SettingItem> SettingsItems { get; set; }
 
         public ICommand SelectIconCommand { get; private set; }
@@ -31,6 +46,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
         public LinkSettings(ObservableCollection<SettingItem> settingsItems, PluginInitContext context)
         {
             InitializeComponent();
+
             Context = context;
             SettingsItems = settingsItems;
 
@@ -51,24 +67,40 @@ namespace Flow.Launcher.Plugin.LinkOpener
                         oldItem.PropertyChanged -= Item_PropertyChanged;
                     }
                 }
+                SaveSettings();
             };
 
             SelectIconCommand = new RelayCommand(OnSelectIcon);
+
             this.DataContext = this;
+            AddToBulkOpenUrls = SettingsItems.Any(x => x.AddToBulkOpenUrls);
+        }
+
+
+        private void OnCheckBoxClicked(object sender, System.Windows.RoutedEventArgs e)
+        {
+            bool isChecked = (sender as CheckBox)?.IsChecked ?? false;
+
+            foreach (var item in SettingsItems)
+            {
+                item.AddToBulkOpenUrls = isChecked;
+            }
+
+            SaveSettings(); 
         }
 
         private void Item_PropertyChanged(object sender, PropertyChangedEventArgs e) => SaveSettings();
 
         private void SaveSettings()
         {
-            var nonNullSettingsItems = SettingsItems
+            var filteredSettingsItems = SettingsItems
                 .Where(item => !string.IsNullOrWhiteSpace(item.Keyword) ||
                                !string.IsNullOrWhiteSpace(item.Title) ||
                                !string.IsNullOrWhiteSpace(item.Url) ||
                                !string.IsNullOrWhiteSpace(item.IconPath))
                 .ToList();
 
-            string jsonData = JsonSerializer.Serialize(nonNullSettingsItems, new JsonSerializerOptions { WriteIndented = true });
+            string jsonData = JsonSerializer.Serialize(filteredSettingsItems, new JsonSerializerOptions { WriteIndented = true });
             Dispatcher.InvokeAsync(() =>
             {
                 File.WriteAllText(SettingsPath, jsonData);

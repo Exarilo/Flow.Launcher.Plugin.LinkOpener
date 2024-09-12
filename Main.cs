@@ -48,17 +48,31 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
         public List<Result> Query(Query query)
         {
-            var results = new List<Result>();
             string keyword = query.FirstSearch.Trim().ToLower();
-
             string arg = query.SecondSearch?.Trim();
-
             var filteredItems = settingsItems
-                .Where(item => keyword.StartsWith(item.Keyword.Trim(), StringComparison.OrdinalIgnoreCase) && (string.IsNullOrEmpty(arg) || item.Title.Contains(arg, StringComparison.OrdinalIgnoreCase)));
+                .Where(item => keyword.StartsWith(item.Keyword.Trim(), StringComparison.OrdinalIgnoreCase)
+                    && (string.IsNullOrEmpty(arg) || item.Title.Contains(arg, StringComparison.OrdinalIgnoreCase)));
 
-            foreach (var item in filteredItems)
+            var filteredItemsToBulkOpen = filteredItems.Where(x => x.AddToBulkOpenUrls);
+
+            var results = new List<Result>();
+
+
+            results.AddRange(filteredItems.Select(CreateResult));
+            if (filteredItemsToBulkOpen.Count() > 1)
             {
-                results.Add(CreateResult(item));
+                results.Add(new Result
+                {
+                    Title = $@"Bulk Open ""{query.FirstSearch.Trim()}""",
+                    SubTitle = "Open all links",
+                    Action = e =>
+                    {
+                        filteredItemsToBulkOpen.ToList().ForEach(x => Context.API.OpenUrl(x.Url));
+                        return true;
+                    },
+                    IcoPath = "Images\\app.png"
+                });
             }
 
             return results;
