@@ -58,7 +58,6 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
             var results = new List<Result>();
 
-
             results.AddRange(filteredItems.Select(CreateResult));
             if (filteredItemsToBulkOpen.Count() > 1)
             {
