@@ -30,7 +30,7 @@ jobs:
 
     # Attach the zip file to the pull request
     - name: Upload DLL zip artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Flow.Launcher.Plugin.LinkOpener.dll
         path: "./bin/Release/win-x64/publish/Flow.Launcher.Plugin.LinkOpener.dll"
