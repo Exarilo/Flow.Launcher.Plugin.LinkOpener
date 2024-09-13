@@ -48,11 +48,22 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
         public List<Result> Query(Query query)
         {
-            string keyword = query.FirstSearch.Trim().ToLower();
-            string arg = query.SecondSearch?.Trim();
+            string fullSearch = query.Search.Trim().ToLower();
+
             var filteredItems = settingsItems
-                .Where(item => keyword.StartsWith(item.Keyword.Trim(), StringComparison.OrdinalIgnoreCase)
-                    && (string.IsNullOrEmpty(arg) || item.Title.Contains(arg, StringComparison.OrdinalIgnoreCase)));
+                .Where(item =>
+                {
+                    if (!fullSearch.StartsWith(item.Keyword.Trim().ToLower(), StringComparison.OrdinalIgnoreCase))
+                        return false;
+
+                    string remainingSearch = fullSearch.Substring(item.Keyword.Trim().Length).Trim();
+
+                    if (string.IsNullOrEmpty(remainingSearch))
+                        return true;
+
+                    return remainingSearch.Split(' ')
+                        .All(arg => item.Title.ToLower().Contains(arg));
+                });
 
             var filteredItemsToBulkOpen = filteredItems.Where(x => x.AddToBulkOpenUrls);
 
@@ -85,19 +96,19 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return new Result
             {
                 Title = settingItem.Title,
-                SubTitle = $"Link to {settingItem.Title}",
+                SubTitle = $"{settingItem.Url}",
                 Action = e =>
                 {
                     Context.API.OpenUrl(settingItem.Url);
                     return true;
                 },
-                IcoPath = settingItem.IconPath?? "Images\\app.png" 
+                IcoPath = settingItem.IconPath ?? "Images\\app.png"
             };
         }
 
         public Control CreateSettingPanel()
         {
-            return new LinkSettings(settingsItems,Context);
+            return new LinkSettings(settingsItems, Context);
         }
     }
 }
