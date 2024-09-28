@@ -76,6 +76,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 {
                     Title = $@"Bulk Open ""{query.FirstSearch.Trim()}""",
                     SubTitle = "Open all links",
+                    Score = 10000,
                     Action = e =>
                     {
                         filteredItemsToBulkOpen.ToList().ForEach(x => Context.API.OpenUrl(x.Url));
@@ -97,6 +98,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             {
                 Title = settingItem.Title,
                 SubTitle = $"{settingItem.Url}",
+                Score = 1000,
                 Action = e =>
                 {
                     Context.API.OpenUrl(settingItem.Url);
