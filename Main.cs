@@ -104,7 +104,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                     Context.API.OpenUrl(settingItem.Url);
                     return true;
                 },
-                IcoPath = settingItem.IconPath ?? "Images\\app.png"
+                IcoPath = string.IsNullOrEmpty(settingItem.IconPath) ? "Images\\app.png" : settingItem.IconPath
             };
         }
 
