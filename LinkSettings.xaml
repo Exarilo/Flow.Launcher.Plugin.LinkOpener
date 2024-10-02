@@ -32,9 +32,8 @@
   <Grid Margin="20">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
-      <!-- Ligne pour le tableau -->
       <RowDefinition Height="Auto" />
-      <!-- Ligne pour la case à cocher -->
+      <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
     <Border Grid.Row="0" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5">
@@ -83,13 +82,36 @@
     </Border>
 
     <CheckBox x:Name="bulkOpenCheckBox"
-              Grid.Row="1"
-              Content="Add additional results to bulk open URLs for items with the same keyword"
-              IsChecked="{Binding AddToBulkOpenUrls, UpdateSourceTrigger=PropertyChanged}"
-              VerticalAlignment="Bottom"
-              HorizontalAlignment="Left"
-              Margin="10"
-              Click="OnCheckBoxClicked" />
+                  Grid.Row="1"
+                  Content="Add additional results to bulk open URLs for items with the same keyword"
+                  IsChecked="{Binding AddToBulkOpenUrls, UpdateSourceTrigger=PropertyChanged}"
+                  VerticalAlignment="Bottom"
+                  HorizontalAlignment="Left"
+                  Margin="0,10,0,10"
+                  Click="OnCheckBoxClicked" />
 
+    <Border Grid.Row="2"
+            Background="#F0F0F0"
+            BorderBrush="#E0E0E0"
+            BorderThickness="1"
+            CornerRadius="5"
+            Padding="10"
+            Margin="0,10,0,0">
+      <StackPanel>
+        <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+          <Run Text="Search query: " FontWeight="Bold"/>
+          <Run Text="In URL, use {0}, {1}, etc."/>
+        </TextBlock>
+        <TextBlock TextWrapping="Wrap">
+          <Run Text="Usage: " FontWeight="Bold"/>
+          <Run Text="keyword-arg1-arg2... (separated by hyphens)"/>
+        </TextBlock>
+
+        <TextBlock TextWrapping="Wrap">
+          <LineBreak/>
+          <Run Text="It also works with bulk open."/>
+        </TextBlock>
+      </StackPanel>
+    </Border>
   </Grid>
 </UserControl>

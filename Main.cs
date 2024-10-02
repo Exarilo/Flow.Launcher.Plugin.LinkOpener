@@ -4,9 +4,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using Flow.Launcher.Plugin;
-using System.Threading.Tasks;
 
 namespace Flow.Launcher.Plugin.LinkOpener
 {
@@ -15,13 +16,13 @@ namespace Flow.Launcher.Plugin.LinkOpener
         private ObservableCollection<SettingItem> settingsItems;
         internal PluginInitContext Context;
 
-        string SettingsFolder => Path.Combine(
-             Path.GetDirectoryName(Path.GetDirectoryName(Context.CurrentPluginMetadata.PluginDirectory)),
-             "Settings",
-             "Plugins",
-             "Flow.Launcher.Plugin.LinkOpener"
-         );
-        string SettingsPath => Path.Combine(SettingsFolder, "Settings.json");
+        private string SettingsFolder => Path.Combine(
+            Path.GetDirectoryName(Path.GetDirectoryName(Context.CurrentPluginMetadata.PluginDirectory)),
+            "Settings",
+            "Plugins",
+            "Flow.Launcher.Plugin.LinkOpener"
+        );
+        private string SettingsPath => Path.Combine(SettingsFolder, "Settings.json");
 
         public void Init(PluginInitContext context)
         {
@@ -49,63 +50,108 @@ namespace Flow.Launcher.Plugin.LinkOpener
         public List<Result> Query(Query query)
         {
             string fullSearch = query.Search.Trim().ToLower();
+            List<string> args = GetAndRemoveArgs(ref fullSearch);
 
-            var filteredItems = settingsItems
-                .Where(item =>
-                {
-                    if (!fullSearch.StartsWith(item.Keyword.Trim().ToLower(), StringComparison.OrdinalIgnoreCase))
-                        return false;
-
-                    string remainingSearch = fullSearch.Substring(item.Keyword.Trim().Length).Trim();
-
-                    if (string.IsNullOrEmpty(remainingSearch))
-                        return true;
-
-                    return remainingSearch.Split(' ')
-                        .All(arg => item.Title.ToLower().Contains(arg));
-                });
-
+            var filteredItems = settingsItems.Where(item => MatchesSearch(item, fullSearch));
             var filteredItemsToBulkOpen = filteredItems.Where(x => x.AddToBulkOpenUrls);
 
             var results = new List<Result>();
+            results.AddRange(filteredItems.Select(x => CreateResult(x, args)).Where(result => result != null));
 
-            results.AddRange(filteredItems.Select(CreateResult));
-            if (filteredItemsToBulkOpen.Count() > 1)
+            if (filteredItemsToBulkOpen.Count() > 1 && results.Count > 1)
             {
-                results.Add(new Result
-                {
-                    Title = $@"Bulk Open ""{query.FirstSearch.Trim()}""",
-                    SubTitle = "Open all links",
-                    Score = 10000,
-                    Action = e =>
-                    {
-                        filteredItemsToBulkOpen.ToList().ForEach(x => Context.API.OpenUrl(x.Url));
-                        return true;
-                    },
-                    IcoPath = "Images\\app.png"
-                });
+                results.Add(CreateBulkOpenResult(query.FirstSearch.Trim(), filteredItemsToBulkOpen, args));
             }
 
             return results;
         }
 
-        private Result CreateResult(SettingItem settingItem)
+        private bool MatchesSearch(SettingItem item, string fullSearch)
         {
-            if (!Uri.TryCreate(settingItem.Url, UriKind.Absolute, out Uri uri))
-                return new Result();
+            if (!fullSearch.StartsWith(item.Keyword.Trim().ToLower(), StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            string remainingSearch = fullSearch.Substring(item.Keyword.Trim().Length).Trim();
+
+            if (string.IsNullOrEmpty(remainingSearch))
+                return true;
+
+            return remainingSearch.Split(' ')
+                .All(arg => item.Title.ToLower().Contains(arg));
+        }
+
+        private List<string> GetAndRemoveArgs(ref string query)
+        {
+            List<string> args = new List<string>();
+            string pattern = @"-\s*(\w+)";
+            MatchCollection matches = Regex.Matches(query, pattern);
+
+            foreach (Match match in matches)
+            {
+                args.Add(match.Groups[1].Value);
+            }
+
+            query = Regex.Replace(query, pattern, "").Trim().Replace('-', ' ');
+
+            return args;
+        }
+
+        private Result CreateResult(SettingItem settingItem, List<string> args)
+        {
+            string updatedUrl = UpdateUrl(settingItem.Url, args);
+
+            if (!Uri.TryCreate(updatedUrl, UriKind.Absolute, out Uri uri))
+                return null;
 
             return new Result
             {
                 Title = settingItem.Title,
-                SubTitle = $"{settingItem.Url}",
+                SubTitle = $"{updatedUrl}",
                 Score = 1000,
                 Action = e =>
                 {
-                    Context.API.OpenUrl(settingItem.Url);
+                    Context.API.OpenUrl(updatedUrl);
                     return true;
                 },
                 IcoPath = string.IsNullOrEmpty(settingItem.IconPath) ? "Images\\app.png" : settingItem.IconPath
             };
+        }
+
+        private Result CreateBulkOpenResult(string searchTerm, IEnumerable<SettingItem> itemsToOpen, List<string> args)
+        {
+            return new Result
+            {
+                Title = $@"Bulk Open ""{searchTerm}""",
+                SubTitle = "Open all links",
+                Score = 10000,
+                Action = e =>
+                {
+                    foreach (var item in itemsToOpen)
+                    {
+                        string updatedUrl = UpdateUrl(item.Url, args);
+                        if (Uri.TryCreate(updatedUrl, UriKind.Absolute, out Uri uri))
+                        {
+                            Context.API.OpenUrl(updatedUrl);
+                        }
+                    }
+                    return true;
+                },
+                IcoPath = "Images\\app.png"
+            };
+        }
+
+        private string UpdateUrl(string url, List<string> args)
+        {
+            string updatedUrl = Regex.Replace(url, @"\{(\d+)\}", match =>
+            {
+                if (int.TryParse(match.Groups[1].Value, out int index) && index >= 0 && index < args.Count)
+                {
+                    return Uri.EscapeDataString(args[index]);
+                }
+                return string.Empty;
+            });
+
+            return Regex.Replace(updatedUrl.Trim(), @"\s+", " ");
         }
 
         public Control CreateSettingPanel()
