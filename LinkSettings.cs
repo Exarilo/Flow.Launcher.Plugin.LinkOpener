@@ -58,6 +58,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                     foreach (SettingItem newItem in e.NewItems)
                     {
                         newItem.PropertyChanged += Item_PropertyChanged;
+                        newItem.AddToBulkOpenUrls = AddToBulkOpenUrls;
                     }
                 }
                 if (e.OldItems != null)
