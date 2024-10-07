@@ -9,18 +9,43 @@
     mc:Ignorable="d">
 
   <UserControl.Resources>
+    <!-- Style for DataGridColumnHeader adapted for light/dark theme -->
     <Style x:Key="DataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
-      <Setter Property="Background" Value="#F0F0F0"/>
-      <Setter Property="Padding" Value="10,5"/>
-      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"/>
+      <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"/>
+      <Setter Property="Padding" Value="10,8"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="BorderThickness" Value="0,0,1,0"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="DataGridColumnHeader">
+            <Grid>
+              <Border Padding="{TemplateBinding Padding}"
+                      BorderBrush="{TemplateBinding BorderBrush}"
+                      BorderThickness="{TemplateBinding BorderThickness}"
+                      Background="{TemplateBinding Background}">
+                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+              </Border>
+            </Grid>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
     </Style>
 
+    <!-- Style for DataGridCell adapted for light/dark theme -->
     <Style x:Key="DataGridCellStyle" TargetType="DataGridCell">
       <Setter Property="Padding" Value="5"/>
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="DataGridCell">
-            <Border Padding="{TemplateBinding Padding}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+            <Border Padding="{TemplateBinding Padding}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    Background="{TemplateBinding Background}"
+                    SnapsToDevicePixels="True">
               <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
             </Border>
           </ControlTemplate>
@@ -36,7 +61,11 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
 
-    <Border Grid.Row="0" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5">
+    <!-- Main content grid with Border -->
+    <Border Grid.Row="0"
+            BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+            BorderThickness="1"
+            CornerRadius="5">
       <ScrollViewer VerticalScrollBarVisibility="Auto" CanContentScroll="True">
         <DataGrid x:Name="dataGrid"
                   AutoGenerateColumns="False"
@@ -81,33 +110,34 @@
       </ScrollViewer>
     </Border>
 
+    <!-- Bulk Open CheckBox -->
     <CheckBox x:Name="bulkOpenCheckBox"
-                  Grid.Row="1"
-                  Content="Add additional results to bulk open URLs for items with the same keyword"
-                  IsChecked="{Binding AddToBulkOpenUrls, UpdateSourceTrigger=PropertyChanged}"
-                  VerticalAlignment="Bottom"
-                  HorizontalAlignment="Left"
-                  Margin="0,10,0,10"
-                  Click="OnCheckBoxClicked" />
+              Grid.Row="1"
+              Content="Add additional results to bulk open URLs for items with the same keyword"
+              IsChecked="{Binding AddToBulkOpenUrls, UpdateSourceTrigger=PropertyChanged}"
+              VerticalAlignment="Bottom"
+              HorizontalAlignment="Left"
+              Margin="0,10,0,10"
+              Click="OnCheckBoxClicked" />
 
+    <!-- Search query info block -->
     <Border Grid.Row="2"
-            Background="#F0F0F0"
-            BorderBrush="#E0E0E0"
+            Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
+            BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
             BorderThickness="1"
             CornerRadius="5"
             Padding="10"
             Margin="0,10,0,0">
       <StackPanel>
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+        <TextBlock TextWrapping="Wrap" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}">
           <Run Text="Search query: " FontWeight="Bold"/>
           <Run Text="In URL, use {0}, {1}, etc."/>
         </TextBlock>
-        <TextBlock TextWrapping="Wrap">
+        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}">
           <Run Text="Usage: " FontWeight="Bold"/>
           <Run Text="keyword-arg1-arg2... (separated by hyphens)"/>
         </TextBlock>
-
-        <TextBlock TextWrapping="Wrap">
+        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}">
           <LineBreak/>
           <Run Text="It also works with bulk open."/>
         </TextBlock>
