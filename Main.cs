@@ -104,9 +104,16 @@ namespace Flow.Launcher.Plugin.LinkOpener
             if (!Uri.TryCreate(updatedUrl, UriKind.Absolute, out Uri uri))
                 return null;
 
-            string iconPath = string.IsNullOrEmpty(settingItem.IconPath)
-                ? await GetFaviconUrl(uri) ?? "Images\\app.png"
-                : settingItem.IconPath;
+            string iconPath = settingItem.IconPath;
+
+            if (string.IsNullOrEmpty(iconPath))
+            {
+                string faviconUrl = $"https://www.google.com/s2/favicons?domain_url={uri.Host}&sz=48";
+                if (await IsFaviconAccessible(faviconUrl))
+                    iconPath = faviconUrl;
+                else
+                     iconPath = "Images\\app.png"; 
+            }
 
             return new Result
             {
@@ -122,25 +129,20 @@ namespace Flow.Launcher.Plugin.LinkOpener
             };
         }
 
-        private async Task<string> GetFaviconUrl(Uri uri)
+        private async Task<bool> IsFaviconAccessible(string faviconUrl)
         {
             try
             {
-                string faviconUrl = $"{uri.Scheme}://{uri.Host}/favicon.ico";
-
                 using (HttpClient client = new HttpClient())
                 {
-                    var request = new HttpRequestMessage(HttpMethod.Head, faviconUrl);
-                    var response = await client.SendAsync(request);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return faviconUrl;
-                    }
+                    var response = await client.GetAsync(faviconUrl);
+                    return response.IsSuccessStatusCode;
                 }
             }
-            catch {}
-            return null;
+            catch
+            {
+                return false; 
+            }
         }
 
         private Result CreateBulkOpenResult(string searchTerm, IEnumerable<SettingItem> itemsToOpen, List<string> args)
