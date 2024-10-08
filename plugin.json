@@ -4,7 +4,7 @@
   "Name": "LinkOpener",
   "Description": "Allows you to open URLs using keywords set in the settings",
   "Author": "Exarilo",
-  "Version": "1.0.8",
+  "Version": "1.0.9",
   "Language": "csharp",
   "Website": "https://github.com/Exarilo/Flow.Launcher.Plugin.LinkOpener",
   "IcoPath": "Images\\app.png",

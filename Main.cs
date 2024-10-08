@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using Flow.Launcher.Plugin;
+using System.Net.Http;
 
 namespace Flow.Launcher.Plugin.LinkOpener
 {
@@ -56,7 +57,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             var filteredItemsToBulkOpen = filteredItems.Where(x => x.AddToBulkOpenUrls);
 
             var results = new List<Result>();
-            results.AddRange(filteredItems.Select(x => CreateResult(x, args)).Where(result => result != null));
+            results.AddRange(filteredItems.Select(x => CreateResult(x, args).Result).Where(result => result != null));
 
             if (filteredItemsToBulkOpen.Count() > 1 && results.Count > 1)
             {
@@ -96,12 +97,16 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return args;
         }
 
-        private Result CreateResult(SettingItem settingItem, List<string> args)
+        private async Task<Result> CreateResult(SettingItem settingItem, List<string> args)
         {
             string updatedUrl = UpdateUrl(settingItem.Url, args);
 
             if (!Uri.TryCreate(updatedUrl, UriKind.Absolute, out Uri uri))
                 return null;
+
+            string iconPath = string.IsNullOrEmpty(settingItem.IconPath)
+                ? await GetFaviconUrl(uri) ?? "Images\\app.png"
+                : settingItem.IconPath;
 
             return new Result
             {
@@ -113,8 +118,29 @@ namespace Flow.Launcher.Plugin.LinkOpener
                     Context.API.OpenUrl(updatedUrl);
                     return true;
                 },
-                IcoPath = string.IsNullOrEmpty(settingItem.IconPath) ? "Images\\app.png" : settingItem.IconPath
+                IcoPath = iconPath
             };
+        }
+
+        private async Task<string> GetFaviconUrl(Uri uri)
+        {
+            try
+            {
+                string faviconUrl = $"{uri.Scheme}://{uri.Host}/favicon.ico";
+
+                using (HttpClient client = new HttpClient())
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Head, faviconUrl);
+                    var response = await client.SendAsync(request);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return faviconUrl;
+                    }
+                }
+            }
+            catch {}
+            return null;
         }
 
         private Result CreateBulkOpenResult(string searchTerm, IEnumerable<SettingItem> itemsToOpen, List<string> args)
