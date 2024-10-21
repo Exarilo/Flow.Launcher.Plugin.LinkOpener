@@ -56,8 +56,9 @@ namespace Flow.Launcher.Plugin.LinkOpener
             var filteredItems = settingsItems.Where(item => MatchesSearch(item, fullSearch));
             var filteredItemsToBulkOpen = filteredItems.Where(x => x.AddToBulkOpenUrls);
 
-            var results = new List<Result>();
-            results.AddRange(filteredItems.Select(x => CreateResult(x, args).Result).Where(result => result != null));
+            var results = filteredItems.Select(x => CreateResult(x, args).Result)
+                                        .Where(result => result != null)
+                                        .ToList();
 
             if (filteredItemsToBulkOpen.Count() > 1 && results.Count > 1)
             {
@@ -69,15 +70,13 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
         private bool MatchesSearch(SettingItem item, string fullSearch)
         {
-            if (!fullSearch.StartsWith(item.Keyword.Trim().ToLower(), StringComparison.OrdinalIgnoreCase))
+            string searchKeyword = item.Keyword.Trim().ToLower();
+            if (!fullSearch.StartsWith(searchKeyword, StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            string remainingSearch = fullSearch.Substring(item.Keyword.Trim().Length).Trim();
+            string remainingSearch = fullSearch.Substring(searchKeyword.Length).Trim();
 
-            if (string.IsNullOrEmpty(remainingSearch))
-                return true;
-
-            return remainingSearch.Split(' ')
+            return string.IsNullOrEmpty(remainingSearch) || remainingSearch.Split(' ')
                 .All(arg => item.Title.ToLower().Contains(arg));
         }
 
@@ -104,21 +103,14 @@ namespace Flow.Launcher.Plugin.LinkOpener
             if (!Uri.TryCreate(updatedUrl, UriKind.Absolute, out Uri uri))
                 return null;
 
-            string iconPath = settingItem.IconPath;
-
-            if (string.IsNullOrEmpty(iconPath))
-            {
-                string faviconUrl = $"https://www.google.com/s2/favicons?domain_url={uri.Host}&sz=48";
-                if (await IsFaviconAccessible(faviconUrl))
-                    iconPath = faviconUrl;
-                else
-                     iconPath = "Images\\app.png"; 
-            }
+            string faviconUrl = $"https://www.google.com/s2/favicons?domain_url={uri.Host}&sz=48";
+            string iconPath = string.IsNullOrEmpty(settingItem.IconPath) ?
+                (await IsFaviconAccessible(faviconUrl) ? faviconUrl : "Images\\app.png") : settingItem.IconPath;
 
             return new Result
             {
                 Title = settingItem.Title,
-                SubTitle = $"{updatedUrl}",
+                SubTitle = updatedUrl,
                 Score = 1000,
                 Action = e =>
                 {
@@ -141,7 +133,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             }
             catch
             {
-                return false; 
+                return false;
             }
         }
 
@@ -149,7 +141,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
         {
             return new Result
             {
-                Title = $@"Bulk Open ""{searchTerm}""",
+                Title = $"Bulk Open \"{searchTerm}\"",
                 SubTitle = "Open all links",
                 Score = 10000,
                 Action = e =>
@@ -167,7 +159,6 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 IcoPath = "Images\\app.png"
             };
         }
-
         private string UpdateUrl(string url, List<string> args)
         {
             string updatedUrl = Regex.Replace(url, @"\{(\d+)\}", match =>

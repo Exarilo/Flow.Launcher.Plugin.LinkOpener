@@ -33,8 +33,10 @@ if (Test-Path $flowLauncherExe) {
     Write-Host "✅ 2. Flow Launcher found. Stopping the application..." -ForegroundColor Cyan
     
     # Stop the Flow Launcher process if it is running
-    Stop-Process -Name "Flow.Launcher" -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 2
+    if (Get-Process -Name "Flow.Launcher" -ErrorAction SilentlyContinue) {
+        Stop-Process -Name "Flow.Launcher" -Force
+        Start-Sleep -Seconds 2
+    }
 
     # Define the plugin path
     $pluginPath = "$AppDataFolder\FlowLauncher\Plugins\$PluginName"
