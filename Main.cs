@@ -60,7 +60,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                                       .Where(result => result != null)
                                       .ToList();
 
-            if (filteredItemsToBulkOpen.Any())
+            if (filteredItemsToBulkOpen.Count > 1)
             {
                 results.Add(CreateBulkOpenResult(fullSearch, filteredItemsToBulkOpen, args));
             }
