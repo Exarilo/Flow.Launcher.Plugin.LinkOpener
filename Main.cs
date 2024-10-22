@@ -51,18 +51,18 @@ namespace Flow.Launcher.Plugin.LinkOpener
         public List<Result> Query(Query query)
         {
             string fullSearch = query.Search.Trim().ToLower();
-            List<string> args = GetAndRemoveArgs(ref fullSearch);
+            List<string> args = GetAndRemoveArgs(ref fullSearch); 
 
             var filteredItems = settingsItems.Where(item => MatchesSearch(item, fullSearch));
-            var filteredItemsToBulkOpen = filteredItems.Where(x => x.AddToBulkOpenUrls);
+            var filteredItemsToBulkOpen = filteredItems.Where(x => x.AddToBulkOpenUrls).ToList();
 
             var results = filteredItems.Select(x => CreateResult(x, args).Result)
-                                        .Where(result => result != null)
-                                        .ToList();
+                                      .Where(result => result != null)
+                                      .ToList();
 
-            if (filteredItemsToBulkOpen.Count() > 1 && results.Count > 1)
+            if (filteredItemsToBulkOpen.Any())
             {
-                results.Add(CreateBulkOpenResult(query.FirstSearch.Trim(), filteredItemsToBulkOpen, args));
+                results.Add(CreateBulkOpenResult(fullSearch, filteredItemsToBulkOpen, args));
             }
 
             return results;
@@ -71,27 +71,30 @@ namespace Flow.Launcher.Plugin.LinkOpener
         private bool MatchesSearch(SettingItem item, string fullSearch)
         {
             string searchKeyword = item.Keyword.Trim().ToLower();
-            if (!fullSearch.StartsWith(searchKeyword, StringComparison.OrdinalIgnoreCase))
-                return false;
 
-            string remainingSearch = fullSearch.Substring(searchKeyword.Length).Trim();
+            string searchBeforeDash = fullSearch.Split('-')[0].Trim().ToLower();
 
-            return string.IsNullOrEmpty(remainingSearch) || remainingSearch.Split(' ')
-                .All(arg => item.Title.ToLower().Contains(arg));
+            return searchBeforeDash.StartsWith(searchKeyword, StringComparison.OrdinalIgnoreCase);
         }
 
         private List<string> GetAndRemoveArgs(ref string query)
         {
             List<string> args = new List<string>();
-            string pattern = @"-\s*(\w+)";
-            MatchCollection matches = Regex.Matches(query, pattern);
+            string pattern = @"-\s*([^-]+)";
+
+            MatchCollection matches = Regex.Matches(query.Trim(), pattern);
 
             foreach (Match match in matches)
             {
-                args.Add(match.Groups[1].Value);
+                 string arg = match.Groups[1].Value.Trim();
+                if (!string.IsNullOrWhiteSpace(arg))
+                {
+                    args.Add(arg);
+                }
             }
 
-            query = Regex.Replace(query, pattern, "").Trim().Replace('-', ' ');
+      
+            query = Regex.Replace(query, pattern, "").Trim();
 
             return args;
         }
@@ -137,16 +140,19 @@ namespace Flow.Launcher.Plugin.LinkOpener
             }
         }
 
-        private Result CreateBulkOpenResult(string searchTerm, IEnumerable<SettingItem> itemsToOpen, List<string> args)
+        private Result CreateBulkOpenResult(string cleanSearchTerm, IEnumerable<SettingItem> itemsToOpen, List<string> args)
         {
+            var items = itemsToOpen.ToList();
+            var argsDisplay = args.Any() ? $" with args: {string.Join(", ", args)}" : "";
+
             return new Result
             {
-                Title = $"Bulk Open \"{searchTerm}\"",
-                SubTitle = "Open all links",
+                Title = $"Bulk Open ({items.Count} items){argsDisplay}",
+                SubTitle = $"Open all matching links for '{cleanSearchTerm}'",
                 Score = 10000,
                 Action = e =>
                 {
-                    foreach (var item in itemsToOpen)
+                    foreach (var item in items)
                     {
                         string updatedUrl = UpdateUrl(item.Url, args);
                         if (Uri.TryCreate(updatedUrl, UriKind.Absolute, out Uri uri))
@@ -159,6 +165,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 IcoPath = "Images\\app.png"
             };
         }
+
         private string UpdateUrl(string url, List<string> args)
         {
             string updatedUrl = Regex.Replace(url, @"\{(\d+)\}", match =>
