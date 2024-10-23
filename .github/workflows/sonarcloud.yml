@@ -1,18 +1,20 @@
 name: SonarCloud analysis
+
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
+
 permissions:
   pull-requests: read 
+
 jobs:
   Analysis:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
         env:
@@ -22,32 +24,3 @@ jobs:
             -Dsonar.projectKey=Exarilo_Flow.Launcher.Plugin.LinkOpener
             -Dsonar.organization=exarilo
           projectBaseDir: .
-      - name: Get SonarCloud analysis results
-        run: |
-          curl -u ${{ secrets.SONAR_TOKEN }}: \
-          "https://sonarcloud.io/api/qualitygates/project_status?projectKey=Exarilo_Flow.Launcher.Plugin.LinkOpener" \
-          -o analysis_result.json
-      - name: Debug analysis results
-        run: |
-          cat analysis_result.json
-          status=$(jq -r '.projectStatus.status' analysis_result.json)
-          reliability=$(jq -r '.projectStatus.conditions[] | select(.metricKey == "new_reliability_rating") | .status' analysis_result.json)
-          security=$(jq -r '.projectStatus.conditions[] | select(.metricKey == "new_security_rating") | .status' analysis_result.json)
-          maintainability=$(jq -r '.projectStatus.conditions[] | select(.metricKey == "new_maintainability_rating") | .status' analysis_result.json)
-          echo "Status: $status"
-          echo "Reliability: $reliability"
-          echo "Security: $security"
-          echo "Maintainability: $maintainability"
-      - name: Send webhook to Discord
-        run: |
-          status=$(jq -r '.projectStatus.status' analysis_result.json)
-          reliability=$(jq -r '.projectStatus.conditions[] | select(.metricKey == "new_reliability_rating") | .status' analysis_result.json)
-          security=$(jq -r '.projectStatus.conditions[] | select(.metricKey == "new_security_rating") | .status' analysis_result.json)
-          maintainability=$(jq -r '.projectStatus.conditions[] | select(.metricKey == "new_maintainability_rating") | .status' analysis_result.json)
-          
-          message="SonarCloud analysis completed.\nGlobal Status: ${status}\nReliability: ${reliability}\nSecurity: ${security}\nMaintainability: ${maintainability}"
-          
-          curl -X POST \
-          -H "Content-Type: application/json" \
-          -d "{\"content\":\"$message\"}" \
-          "${{ secrets.DISCORD_WEBHOOK }}"
