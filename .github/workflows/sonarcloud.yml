@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  
+        uses: actions/checkout@v4
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
         env:
@@ -24,15 +24,17 @@ jobs:
           projectBaseDir: .
       - name: Get SonarCloud analysis results
         run: |
-          sleep 10  
           curl -u ${{ secrets.SONAR_TOKEN }}: \
           "https://sonarcloud.io/api/qualitygates/project_status?projectKey=Exarilo_Flow.Launcher.Plugin.LinkOpener" \
           -o analysis_result.json
-          cat analysis_result.json  
       - name: Send webhook to Discord
         run: |
-          analysis_status=$(jq -r '.projectStatus.status // "Unknown"' analysis_result.json)
+          status=$(jq -r '.projectStatus.status' analysis_result.json)
+          reliability=$(jq -r '.projectStatus.conditions[] | select(.metricKey == "new_reliability_rating") | .status' analysis_result.json)
+          security=$(jq -r '.projectStatus.conditions[] | select(.metricKey == "new_security_rating") | .status' analysis_result.json)
+          maintainability=$(jq -r '.projectStatus.conditions[] | select(.metricKey == "new_maintainability_rating") | .status' analysis_result.json)
+          
           curl -X POST \
           -H "Content-Type: application/json" \
-          -d "{\"content\": \"SonarCloud analysis completed for project Exarilo_Flow.Launcher.Plugin.LinkOpener.\nStatus: ${analysis_status}\"}" \
+          -d "{\"content\": \"SonarCloud analysis completed. Global Status: $status | Reliability: $reliability | Security: $security | Maintainability: $maintainability\"}" \
           "${{ secrets.DISCORD_WEBHOOK }}"
