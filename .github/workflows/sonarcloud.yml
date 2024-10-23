@@ -1,0 +1,26 @@
+name: SonarCloud analysis
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read 
+
+jobs:
+  Analysis:
+    runs-on: windows-latest
+
+    steps:
+      - name: Analyze with SonarCloud
+        uses: SonarSource/sonarcloud-github-action@latest
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} 
+        with:
+          args:
+            -Dsonar.projectKey=Exarilo_Flow.Launcher.Plugin.LinkOpener
+            -Dsonar.organization=exarilo
+          projectBaseDir: .
