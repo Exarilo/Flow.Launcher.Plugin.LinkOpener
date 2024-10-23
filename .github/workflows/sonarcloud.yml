@@ -1,23 +1,18 @@
 name: SonarCloud analysis
-
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
-
 permissions:
   pull-requests: read 
-
 jobs:
   Analysis:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
         env:
@@ -27,17 +22,16 @@ jobs:
             -Dsonar.projectKey=Exarilo_Flow.Launcher.Plugin.LinkOpener
             -Dsonar.organization=exarilo
           projectBaseDir: .
-
       - name: Get SonarCloud analysis results
         run: |
           curl -u ${{ secrets.SONAR_TOKEN }}: \
           "https://sonarcloud.io/api/qualitygates/project_status?projectKey=Exarilo_Flow.Launcher.Plugin.LinkOpener" \
           -o analysis_result.json
-
       - name: Send webhook to Discord
         run: |
           analysis_status=$(jq -r '.projectStatus.status' analysis_result.json)
           quality_gate=$(jq -r '.projectStatus.conditions[] | select(.metric == "new_reliability_rating") | .status' analysis_result.json)
-          curl -X POST -H "Content-Type: application/json" \
+          curl -X POST \
+          -H "Content-Type: application/json" \
           -d "{\"content\": \"SonarCloud analysis completed for project Exarilo_Flow.Launcher.Plugin.LinkOpener. Status: $analysis_status. Quality Gate: $quality_gate\"}" \
-          -H "Authorization: Bearer ${{ secrets.DISCORD_WEBHOOK }}"
+          "${{ secrets.DISCORD_WEBHOOK }}"
