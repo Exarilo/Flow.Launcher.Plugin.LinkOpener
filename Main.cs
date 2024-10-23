@@ -71,10 +71,13 @@ namespace Flow.Launcher.Plugin.LinkOpener
         private bool MatchesSearch(SettingItem item, string fullSearch)
         {
             string searchKeyword = item.Keyword.Trim().ToLower();
+            if (!fullSearch.StartsWith(searchKeyword, StringComparison.OrdinalIgnoreCase))
+                return false;
 
-            string searchBeforeDash = fullSearch.Split('-')[0].Trim().ToLower();
+            string remainingSearch = fullSearch.Substring(searchKeyword.Length).Trim();
 
-            return searchBeforeDash.StartsWith(searchKeyword, StringComparison.OrdinalIgnoreCase);
+            return string.IsNullOrEmpty(remainingSearch) || remainingSearch.Split(' ')
+                .All(arg => item.Title.ToLower().Contains(arg));
         }
 
         private List<string> GetAndRemoveArgs(ref string query)
