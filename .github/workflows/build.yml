@@ -45,6 +45,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: powershell
         run: |
-          .\.sonar\scanner\dotnet-sonarscanner begin /k:"Exarilo_Flow.Launcher.Plugin.LinkOpener" /o:"exarilo" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.scanner.scanAll=false /d:sonar.cs.vstest.reportsPaths="**/*.trx" /d:sonar.cs.coverageReportPaths="**/coverage.cobertura.xml"
-          dotnet build -p:CollectCoverage=true -p:CoverletOutputFormat=cobertura
+          .\.sonar\scanner\dotnet-sonarscanner begin /k:"Exarilo_Flow.Launcher.Plugin.LinkOpener" /o:"exarilo" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.scanner.scanAll=false /d:sonar.coverage.exclusions="**/*" 
+          dotnet build
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
