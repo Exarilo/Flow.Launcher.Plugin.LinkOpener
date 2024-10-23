@@ -40,4 +40,4 @@ jobs:
           quality_gate=$(jq -r '.projectStatus.conditions[] | select(.metric == "new_reliability_rating") | .status' analysis_result.json)
           curl -X POST -H "Content-Type: application/json" \
           -d "{\"content\": \"SonarCloud analysis completed for project Exarilo_Flow.Launcher.Plugin.LinkOpener. Status: $analysis_status. Quality Gate: $quality_gate\"}" \
-          {{ secrets.DISCORD_WEBHOOK }}
+          -H "Authorization: Bearer ${{ secrets.DISCORD_WEBHOOK }}"
