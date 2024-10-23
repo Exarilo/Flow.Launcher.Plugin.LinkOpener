@@ -55,5 +55,5 @@ jobs:
           
           curl -X POST \
           -H "Content-Type: application/json" \
-          -d "{\"content\": \"SonarCloud analysis completed. Global Status: $status | Reliability: $reliability | Security: $security | Maintainability: $maintainability\"}" \
+          -d "{\"content\": \"SonarCloud analysis completed. Global Status: '$status' | Reliability: '$reliability' | Security: '$security' | Maintainability: '$maintainability'\"}" \
           "${{ secrets.DISCORD_WEBHOOK }}"
