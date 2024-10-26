@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using Flow.Launcher.Plugin;
 using System.Net.Http;
+using System.Threading;
 
 namespace Flow.Launcher.Plugin.LinkOpener
 {
-    public class LinkOpener : IPlugin, ISettingProvider
+    public class LinkOpener : IAsyncPlugin, ISettingProvider
     {
         private ObservableCollection<SettingItem> settingsItems;
         internal PluginInitContext Context;
@@ -25,10 +26,10 @@ namespace Flow.Launcher.Plugin.LinkOpener
         );
         private string SettingsPath => Path.Combine(SettingsFolder, "Settings.json");
 
-        public void Init(PluginInitContext context)
+        public async Task InitAsync(PluginInitContext context)
         {
             Context = context;
-            LoadSettings().GetAwaiter().GetResult();
+            await LoadSettings();
         }
 
         private async Task LoadSettings()
@@ -48,7 +49,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             }
         }
 
-        public List<Result> Query(Query query)
+        public async Task<List<Result>> QueryAsync(Query query, CancellationToken token)
         {
             string fullSearch = query.Search.Trim().ToLower();
             List<string> args = GetAndRemoveArgs(ref fullSearch);
@@ -56,16 +57,16 @@ namespace Flow.Launcher.Plugin.LinkOpener
             var filteredItems = settingsItems.Where(item => MatchesSearch(item, fullSearch));
             var filteredItemsToBulkOpen = filteredItems.Where(x => x.AddToBulkOpenUrls).ToList();
 
-            var results = filteredItems.Select(x => CreateResult(x, args).Result)
-                                      .Where(result => result != null)
-                                      .ToList();
+            var results = await Task.WhenAll(filteredItems.Select(x => CreateResult(x, args)));
+
+            var filteredResults = results.Where(result => result != null).ToList();
 
             if (filteredItemsToBulkOpen.Count > 1)
             {
-                results.Add(CreateBulkOpenResult(fullSearch, filteredItemsToBulkOpen, args));
+                filteredResults.Add(CreateBulkOpenResult(fullSearch, filteredItemsToBulkOpen, args));
             }
 
-            return results;
+            return filteredResults;
         }
 
         private static bool MatchesSearch(SettingItem item, string fullSearch)
@@ -82,9 +83,9 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
         private static List<string> GetAndRemoveArgs(ref string query)
         {
-            List<string> args = new List<string>();
-            string pattern = @"-\s*([^-]+)";
+            const string pattern = @"-\s*([^-]+)";
 
+            List<string> args = new List<string>();
             TimeSpan timeout = TimeSpan.FromSeconds(3);
             MatchCollection matches = Regex.Matches(query.Trim(), pattern, RegexOptions.None, timeout);
 
@@ -98,19 +99,19 @@ namespace Flow.Launcher.Plugin.LinkOpener
             }
 
             query = Regex.Replace(query, pattern, "", RegexOptions.None, timeout).Trim();
-
             return args;
         }
 
         private async Task<Result> CreateResult(SettingItem settingItem, List<string> args)
         {
-            string updatedUrl = UrlUpdater.UpdateUrl(settingItem.Url, args);
+            Uri updatedUri = UrlUpdater.UpdateUrl(settingItem.Url, args);
 
-            if (!Uri.TryCreate(updatedUrl, UriKind.Absolute, out Uri uri))
+            if (updatedUri == null)
                 return null;
 
-            string faviconUrl = $"https://www.google.com/s2/favicons?domain_url={uri.Host}&sz=48";
+            string faviconUrl = $"https://www.google.com/s2/favicons?domain_url={updatedUri.Host}&sz=48";
             string iconPath;
+
             if (string.IsNullOrEmpty(settingItem.IconPath))
                 iconPath = await IsFaviconAccessible(faviconUrl) ? faviconUrl : "Images\\app.png";
             else
@@ -119,18 +120,18 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return new Result
             {
                 Title = settingItem.Title,
-                SubTitle = updatedUrl,
+                SubTitle = updatedUri.ToString(),
                 Score = 1000,
                 Action = e =>
                 {
-                    Context.API.OpenUrl(updatedUrl);
+                    Context.API.OpenUrl(updatedUri.ToString()); // Convert Uri to string
                     return true;
                 },
                 IcoPath = iconPath
             };
         }
 
-        private static async Task<bool> IsFaviconAccessible(string faviconUrl)
+        private async Task<bool> IsFaviconAccessible(string faviconUrl) // Change parameter type to string
         {
             try
             {
@@ -150,7 +151,6 @@ namespace Flow.Launcher.Plugin.LinkOpener
         {
             var items = itemsToOpen.ToList();
             var argsDisplay = args.Any() ? $" with args: {string.Join(", ", args)}" : "";
-
             return new Result
             {
                 Title = $"Bulk Open ({items.Count} items){argsDisplay}",
@@ -160,10 +160,10 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 {
                     foreach (var item in items)
                     {
-                        string updatedUrl = UrlUpdater.UpdateUrl(item.Url, args);
-                        if (Uri.TryCreate(updatedUrl, UriKind.Absolute, out Uri uri))
+                        Uri updatedUri = UrlUpdater.UpdateUrl(item.Url, args);
+                        if (updatedUri != null) 
                         {
-                            Context.API.OpenUrl(updatedUrl);
+                            Context.API.OpenUrl(updatedUri); 
                         }
                     }
                     return true;
@@ -171,14 +171,13 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 IcoPath = "Images\\app.png"
             };
         }
-
         public Control CreateSettingPanel()
         {
             return new LinkSettings(settingsItems, Context);
         }
     }
 
-    public static partial class UrlUpdater 
+    public static partial class UrlUpdater
     {
         [GeneratedRegex(@"\{(\d+)\}", RegexOptions.None, matchTimeoutMilliseconds: 3000)]
         private static partial Regex PlaceholderRegex();
@@ -186,7 +185,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
         [GeneratedRegex(@"\s+", RegexOptions.None, matchTimeoutMilliseconds: 3000)]
         private static partial Regex WhitespaceRegex();
 
-        public static string UpdateUrl(string url, List<string> args)
+        public static Uri UpdateUrl(string url, List<string> args)
         {
             string updatedUrl = PlaceholderRegex().Replace(url, match =>
             {
@@ -196,8 +195,13 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 }
                 return string.Empty;
             });
+            updatedUrl = WhitespaceRegex().Replace(updatedUrl.Trim(), " ");
+            if (Uri.TryCreate(updatedUrl, UriKind.Absolute, out Uri uri))
+            {
+                return uri;
+            }
 
-            return WhitespaceRegex().Replace(updatedUrl.Trim(), " ");
+            throw new UriFormatException($"The URL '{updatedUrl}' is not valid.");
         }
     }
 }
