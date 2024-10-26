@@ -105,15 +105,14 @@ namespace Flow.Launcher.Plugin.LinkOpener
         private async Task<Result> CreateResult(SettingItem settingItem, List<string> args)
         {
             Uri updatedUri = UrlUpdater.UpdateUrl(settingItem.Url, args);
-
             if (updatedUri == null)
                 return null;
 
-            string faviconUrl = $"https://www.google.com/s2/favicons?domain_url={updatedUri.Host}&sz=48";
+            Uri faviconUri = new Uri($"https://www.google.com/s2/favicons?domain_url={updatedUri.Host}&sz=48"); 
             string iconPath;
 
             if (string.IsNullOrEmpty(settingItem.IconPath))
-                iconPath = await IsFaviconAccessible(faviconUrl) ? faviconUrl : "Images\\app.png";
+                iconPath = await IsFaviconAccessible(faviconUri) ? faviconUri.ToString() : "Images\\app.png"; 
             else
                 iconPath = settingItem.IconPath;
 
@@ -124,20 +123,20 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 Score = 1000,
                 Action = e =>
                 {
-                    Context.API.OpenUrl(updatedUri.ToString()); // Convert Uri to string
+                    Context.API.OpenUrl(updatedUri);
                     return true;
                 },
                 IcoPath = iconPath
             };
         }
 
-        private async Task<bool> IsFaviconAccessible(string faviconUrl) // Change parameter type to string
+        private static async Task<bool> IsFaviconAccessible(Uri faviconUri) 
         {
             try
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    var response = await client.GetAsync(faviconUrl);
+                    var response = await client.GetAsync(faviconUri); 
                     return response.IsSuccessStatusCode;
                 }
             }
@@ -146,6 +145,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 return false;
             }
         }
+
 
         private Result CreateBulkOpenResult(string cleanSearchTerm, IEnumerable<SettingItem> itemsToOpen, List<string> args)
         {
@@ -200,8 +200,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             {
                 return uri;
             }
-
-            throw new UriFormatException($"The URL '{updatedUrl}' is not valid.");
+            return null;
         }
     }
 }
