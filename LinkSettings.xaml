@@ -9,7 +9,6 @@
     mc:Ignorable="d">
 
   <UserControl.Resources>
-    <!-- Style for DataGridColumnHeader adapted for light/dark theme -->
     <Style x:Key="DataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
       <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"/>
       <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"/>
@@ -27,7 +26,7 @@
                       BorderThickness="{TemplateBinding BorderThickness}"
                       Background="{TemplateBinding Background}">
                 <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
               </Border>
             </Grid>
           </ControlTemplate>
@@ -35,7 +34,6 @@
       </Setter>
     </Style>
 
-    <!-- Style for DataGridCell adapted for light/dark theme -->
     <Style x:Key="DataGridCellStyle" TargetType="DataGridCell">
       <Setter Property="Padding" Value="5"/>
       <Setter Property="Template">
@@ -60,8 +58,6 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
-
-    <!-- Main content grid with Border -->
     <Border Grid.Row="0"
             BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
             BorderThickness="1"
@@ -84,7 +80,7 @@
             <DataGridTextColumn Header="Keyword" Binding="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}" Width="*" />
             <DataGridTextColumn Header="Title" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Width="*" />
             <DataGridTextColumn Header="URL" Binding="{Binding Url, UpdateSourceTrigger=PropertyChanged}" Width="*" />
-            <DataGridTemplateColumn Header="Icon" Width="100">
+            <DataGridTemplateColumn Header="Icon" Width="130">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate>
                   <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -101,6 +97,14 @@
                             Height="24"
                             Padding="0"
                             Margin="0,0,5,0"/>
+                    <Button Content="X"
+                            Command="{Binding DataContext.RemoveIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"
+                            Width="24"
+                            Height="24"
+                            Padding="0"
+                            Margin="0,0,5,0"
+                            ToolTip="Remove icon"/>
                   </StackPanel>
                 </DataTemplate>
               </DataGridTemplateColumn.CellTemplate>
@@ -110,7 +114,6 @@
       </ScrollViewer>
     </Border>
 
-    <!-- Bulk Open CheckBox -->
     <CheckBox x:Name="bulkOpenCheckBox"
               Grid.Row="1"
               Content="Add additional results to bulk open URLs for items with the same keyword"
@@ -120,7 +123,6 @@
               Margin="0,10,0,10"
               Click="OnCheckBoxClicked" />
 
-    <!-- Search query info block -->
     <Border Grid.Row="2"
             Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
             BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"

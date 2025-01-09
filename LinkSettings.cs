@@ -23,9 +23,9 @@ namespace Flow.Launcher.Plugin.LinkOpener
             "Flow.Launcher.Plugin.LinkOpener",
             "Settings.json"
         );
-        
+
         protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
- 
+
         private bool addToBulkOpenUrls;
         public bool AddToBulkOpenUrls
         {
@@ -42,6 +42,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
         public ObservableCollection<SettingItem> SettingsItems { get; set; }
 
         public ICommand SelectIconCommand { get; private set; }
+        public ICommand RemoveIconCommand { get; private set; }
 
         public LinkSettings(ObservableCollection<SettingItem> settingsItems, PluginInitContext context)
         {
@@ -72,11 +73,29 @@ namespace Flow.Launcher.Plugin.LinkOpener
             };
 
             SelectIconCommand = new RelayCommand(OnSelectIcon);
+            RemoveIconCommand = new RelayCommand(OnRemoveIcon);
 
             this.DataContext = this;
             AddToBulkOpenUrls = SettingsItems.Any(x => x.AddToBulkOpenUrls);
         }
 
+        private void OnRemoveIcon(object parameter)
+        {
+            var selectedItem = parameter as SettingItem;
+            if (selectedItem != null)
+            {
+                Dispatcher.InvokeAsync(() =>
+                {
+                    selectedItem.IconPath = string.Empty;
+
+                    int index = SettingsItems.IndexOf(selectedItem);
+                    if (index >= 0)
+                    {
+                        SettingsItems[index] = selectedItem;
+                    }
+                });
+            }
+        }
 
         private void OnCheckBoxClicked(object sender, System.Windows.RoutedEventArgs e)
         {
@@ -87,7 +106,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 item.AddToBulkOpenUrls = isChecked;
             }
 
-            SaveSettings(); 
+            SaveSettings();
         }
 
         private void Item_PropertyChanged(object sender, PropertyChangedEventArgs e) => SaveSettings();
