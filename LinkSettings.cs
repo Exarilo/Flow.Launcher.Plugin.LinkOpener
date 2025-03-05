@@ -8,6 +8,7 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Flow.Launcher.Plugin.LinkOpener
 {
@@ -15,7 +16,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public PluginInitContext Context { get; private set; }
-
+        private string defaultDelimiter = "-";
         string SettingsPath => Path.Combine(
             Path.GetDirectoryName(Path.GetDirectoryName(Context.CurrentPluginMetadata.PluginDirectory)),
             "Settings",
@@ -23,7 +24,6 @@ namespace Flow.Launcher.Plugin.LinkOpener
             "Flow.Launcher.Plugin.LinkOpener",
             "Settings.json"
         );
-
         protected virtual void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         private bool addToBulkOpenUrls;
@@ -35,23 +35,42 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 if (addToBulkOpenUrls != value)
                 {
                     addToBulkOpenUrls = value;
+                    foreach (var item in SettingsItems)
+                    {
+                        item.AddToBulkOpenUrls = value;
+                    }
+                    
                     OnPropertyChanged(nameof(AddToBulkOpenUrls));
+                    SaveSettings();
                 }
             }
         }
         public ObservableCollection<SettingItem> SettingsItems { get; set; }
-
         public ICommand SelectIconCommand { get; private set; }
         public ICommand RemoveIconCommand { get; private set; }
-
         public LinkSettings(ObservableCollection<SettingItem> settingsItems, PluginInitContext context)
         {
             InitializeComponent();
 
             Context = context;
-            SettingsItems = settingsItems;
+            SettingsItems = settingsItems ?? new ObservableCollection<SettingItem>();
 
-            SettingsItems.ToList().ForEach(x => x.PropertyChanged += (s, e) => SaveSettings());
+            foreach (var item in SettingsItems)
+            {
+                item.PropertyChanged += Item_PropertyChanged;
+            }
+            if (SettingsItems.Any())
+            {
+                var delimiterGroups = SettingsItems
+                    .GroupBy(item => item.Delimiter)
+                    .OrderByDescending(g => g.Count());
+                
+                if (delimiterGroups.Any())
+                {
+                    defaultDelimiter = delimiterGroups.First().Key;
+                }
+            }
+            
             SettingsItems.CollectionChanged += (s, e) =>
             {
                 if (e.NewItems != null)
@@ -59,6 +78,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                     foreach (SettingItem newItem in e.NewItems)
                     {
                         newItem.PropertyChanged += Item_PropertyChanged;
+                        newItem.Delimiter = defaultDelimiter;
                         newItem.AddToBulkOpenUrls = AddToBulkOpenUrls;
                     }
                 }
@@ -77,6 +97,43 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
             this.DataContext = this;
             AddToBulkOpenUrls = SettingsItems.Any(x => x.AddToBulkOpenUrls);
+            Loaded += (s, e) => InitializeAdvancedControls();
+        }
+        private void InitializeAdvancedControls()
+        {
+            try
+            {
+                if (DefaultDelimiterTextBox != null)
+                {
+                    DefaultDelimiterTextBox.Text = defaultDelimiter;
+                }
+            }
+            catch {}
+        }
+        private void OnDefaultDelimiterChanged(object sender, TextChangedEventArgs e)
+        {
+            try
+            {
+                if (sender is TextBox textBox)
+                {
+                    string newDelimiter = textBox.Text;
+                    
+                    if (string.IsNullOrEmpty(newDelimiter))
+                    {
+                        newDelimiter = " ";
+                    }
+                    
+                    defaultDelimiter = newDelimiter;
+                    
+                    foreach (var item in SettingsItems)
+                    {
+                        item.Delimiter = defaultDelimiter;
+                    }
+                    
+                    SaveSettings();
+                }
+            }
+            catch {}
         }
 
         private void OnRemoveIcon(object parameter)
@@ -86,52 +143,77 @@ namespace Flow.Launcher.Plugin.LinkOpener
             {
                 Dispatcher.InvokeAsync(() =>
                 {
-                    selectedItem.IconPath = string.Empty;
-
-                    int index = SettingsItems.IndexOf(selectedItem);
-                    if (index >= 0)
+                    try
                     {
-                        SettingsItems[index] = selectedItem;
+                        selectedItem.IconPath = string.Empty;
+
+                        int index = SettingsItems.IndexOf(selectedItem);
+                        if (index >= 0)
+                        {
+                            SettingsItems[index] = selectedItem;
+                        }
                     }
+                    catch {}
                 });
             }
-        }
-
-        private void OnCheckBoxClicked(object sender, System.Windows.RoutedEventArgs e)
-        {
-            bool isChecked = (sender as CheckBox)?.IsChecked ?? false;
-
-            foreach (var item in SettingsItems)
-            {
-                item.AddToBulkOpenUrls = isChecked;
-            }
-
-            SaveSettings();
         }
 
         private void Item_PropertyChanged(object sender, PropertyChangedEventArgs e) => SaveSettings();
 
         private void SaveSettings()
         {
-            var filteredSettingsItems = SettingsItems
-                .Where(item => !string.IsNullOrWhiteSpace(item.Keyword) ||
-                               !string.IsNullOrWhiteSpace(item.Title) ||
-                               !string.IsNullOrWhiteSpace(item.Url) ||
-                               !string.IsNullOrWhiteSpace(item.IconPath))
-                .ToList();
-
-            string jsonData = JsonSerializer.Serialize(filteredSettingsItems, new JsonSerializerOptions { WriteIndented = true });
-            Dispatcher.InvokeAsync(() =>
+            const int maxRetries = 3;
+            const int delayMs = 100;
+            
+            try
             {
-                File.WriteAllText(SettingsPath, jsonData);
-            });
-        }
+                string settingsFolder = Path.GetDirectoryName(SettingsPath);
+                if (!Directory.Exists(settingsFolder))
+                {
+                    Directory.CreateDirectory(settingsFolder);
+                }
+                
+                var filteredSettingsItems = SettingsItems
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Keyword) ||
+                                   !string.IsNullOrWhiteSpace(item.Title) ||
+                                   !string.IsNullOrWhiteSpace(item.Url) ||
+                                   !string.IsNullOrWhiteSpace(item.IconPath))
+                    .ToList();
 
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                string jsonData = JsonSerializer.Serialize(filteredSettingsItems, options);
+                
+                Dispatcher.InvokeAsync(async () =>
+                {
+                    for (int attempt = 0; attempt < maxRetries; attempt++)
+                    {
+                        try
+                        {
+                            string tempPath = Path.GetTempFileName();
+                            await File.WriteAllTextAsync(tempPath, jsonData);
+                            
+                            if (File.Exists(SettingsPath))
+                            {
+                                File.Delete(SettingsPath);
+                            }
+                            File.Move(tempPath, SettingsPath);
+                            return;
+                        }
+                        catch (IOException) when (attempt < maxRetries - 1)
+                        {
+                            await Task.Delay(delayMs * (attempt + 1));
+                        }
+                        catch {}
+                    }
+                });
+            }
+            catch {}
+        }
         private void OnSelectIcon(object parameter)
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "Image Files|*.png;*.jpg|All Files|*.*",
+                Filter = "Image Files|*.png;*.jpg;*.jpeg;*.ico|All Files|*.*",
                 Title = "Select an Icon"
             };
 
@@ -142,13 +224,17 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 {
                     Dispatcher.InvokeAsync(() =>
                     {
-                        selectedItem.IconPath = openFileDialog.FileName;
-
-                        int index = SettingsItems.IndexOf(selectedItem);
-                        if (index >= 0)
+                        try
                         {
-                            SettingsItems[index] = selectedItem;
+                            selectedItem.IconPath = openFileDialog.FileName;
+
+                            int index = SettingsItems.IndexOf(selectedItem);
+                            if (index >= 0)
+                            {
+                                SettingsItems[index] = selectedItem;
+                            }
                         }
+                        catch {}
                     });
                 }
             }
@@ -164,7 +250,6 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 _execute = execute ?? throw new ArgumentNullException(nameof(execute));
                 _canExecute = canExecute;
             }
-
             public bool CanExecute(object parameter) => _canExecute?.Invoke(parameter) ?? true;
 
             public void Execute(object parameter) => _execute(parameter);

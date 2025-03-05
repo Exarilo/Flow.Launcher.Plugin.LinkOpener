@@ -5,11 +5,12 @@ namespace Flow.Launcher.Plugin.LinkOpener
 {
     public class SettingItem : INotifyPropertyChanged
     {
-        private string keyword;
-        private string title;
-        private string url;
-        private string iconPath;
+        private string keyword = string.Empty;
+        private string title = string.Empty;
+        private string url = string.Empty;
+        private string iconPath = string.Empty;
         private bool addToBulkOpenUrls;
+        private string delimiter = "-";
 
         [JsonPropertyName("Keyword")]
         public string Keyword
@@ -19,12 +20,11 @@ namespace Flow.Launcher.Plugin.LinkOpener
             {
                 if (keyword != value)
                 {
-                    keyword = value;
+                    keyword = value?.Trim() ?? string.Empty;
                     OnPropertyChanged(nameof(Keyword));
                 }
             }
         }
-
         [JsonPropertyName("Title")]
         public string Title
         {
@@ -33,12 +33,11 @@ namespace Flow.Launcher.Plugin.LinkOpener
             {
                 if (title != value)
                 {
-                    title = value;
+                    title = value?.Trim() ?? string.Empty;
                     OnPropertyChanged(nameof(Title));
                 }
             }
         }
-
         [JsonPropertyName("Url")]
         public string Url
         {
@@ -47,8 +46,22 @@ namespace Flow.Launcher.Plugin.LinkOpener
             {
                 if (url != value)
                 {
-                    url = value;
+                    url = value?.Trim() ?? string.Empty;
                     OnPropertyChanged(nameof(Url));
+                }
+            }
+        }
+
+        [JsonPropertyName("Delimiter")]
+        public string Delimiter
+        {
+            get => delimiter;
+            set
+            {
+                if (delimiter != value)
+                {
+                    delimiter = value?.Trim() ?? "-";
+                    OnPropertyChanged(nameof(Delimiter));
                 }
             }
         }
@@ -61,7 +74,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             {
                 if (iconPath != value)
                 {
-                    iconPath = value;
+                    iconPath = value?.Trim() ?? string.Empty;
                     OnPropertyChanged(nameof(IconPath));
                 }
             }
@@ -81,12 +94,18 @@ namespace Flow.Launcher.Plugin.LinkOpener
             }
         }
 
-
         public event PropertyChangedEventHandler PropertyChanged;
-
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        public bool IsValid()
+        {
+            return !string.IsNullOrWhiteSpace(Keyword) && !string.IsNullOrWhiteSpace(Url);
+        }
+        public override string ToString()
+        {
+            return $"SettingItem: {Keyword} - {Title}";
         }
     }
 }

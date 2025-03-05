@@ -50,100 +50,144 @@
         </Setter.Value>
       </Setter>
     </Style>
+    
+    <Style x:Key="OptionGroupStyle" TargetType="GroupBox">
+      <Setter Property="Margin" Value="0,10,0,0"/>
+      <Setter Property="Padding" Value="10"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+    
+    <Style x:Key="OptionLabelStyle" TargetType="TextBlock">
+      <Setter Property="Margin" Value="0,5,0,2"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
   </UserControl.Resources>
 
   <Grid Margin="20">
-    <Grid.RowDefinitions>
-      <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
-    </Grid.RowDefinitions>
-    <Border Grid.Row="0"
-            BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
-            BorderThickness="1"
-            CornerRadius="5">
-      <ScrollViewer VerticalScrollBarVisibility="Auto" CanContentScroll="True">
-        <DataGrid x:Name="dataGrid"
-                  AutoGenerateColumns="False"
-                  ItemsSource="{Binding SettingsItems}"
-                  CanUserAddRows="True"
-                  CanUserDeleteRows="True"
-                  CanUserSortColumns="True"
-                  HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal"
-                  BorderThickness="0"
-                  RowHeaderWidth="0"
-                  ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
-                  CellStyle="{StaticResource DataGridCellStyle}"
-                  Height="300">
-          <DataGrid.Columns>
-            <DataGridTextColumn Header="Keyword" Binding="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}" Width="*" />
-            <DataGridTextColumn Header="Title" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Width="*" />
-            <DataGridTextColumn Header="URL" Binding="{Binding Url, UpdateSourceTrigger=PropertyChanged}" Width="*" />
-            <DataGridTemplateColumn Header="Icon" Width="130">
-              <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate>
-                  <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Image Source="{Binding IconPath}"
-                           Width="24"
-                           Height="24"
-                           Margin="0,0,5,0"
-                           Stretch="Uniform"
-                           RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <Button Content="..."
-                            Command="{Binding DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                            CommandParameter="{Binding}"
-                            Width="24"
-                            Height="24"
-                            Padding="0"
-                            Margin="0,0,5,0"/>
-                    <Button Content="X"
-                            Command="{Binding DataContext.RemoveIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                            CommandParameter="{Binding}"
-                            Width="24"
-                            Height="24"
-                            Padding="0"
-                            Margin="0,0,5,0"
-                            ToolTip="Remove icon"/>
-                  </StackPanel>
-                </DataTemplate>
-              </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>
-          </DataGrid.Columns>
-        </DataGrid>
-      </ScrollViewer>
-    </Border>
+    <TabControl>
+      <TabItem Header="Basic">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <Border Grid.Row="0"
+                  BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                  BorderThickness="1"
+                  CornerRadius="5">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" CanContentScroll="True">
+              <DataGrid x:Name="dataGrid"
+                        AutoGenerateColumns="False"
+                        ItemsSource="{Binding SettingsItems}"
+                        CanUserAddRows="True"
+                        CanUserDeleteRows="True"
+                        CanUserSortColumns="True"
+                        HeadersVisibility="Column"
+                        GridLinesVisibility="Horizontal"
+                        BorderThickness="0"
+                        RowHeaderWidth="0"
+                        ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
+                        CellStyle="{StaticResource DataGridCellStyle}"
+                        Height="300">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Keyword" Binding="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                  <DataGridTextColumn Header="Title" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                  <DataGridTextColumn Header="URL" Binding="{Binding Url, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                  <DataGridTemplateColumn Header="Icon" Width="130">
+                    <DataGridTemplateColumn.CellTemplate>
+                      <DataTemplate>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                          <Image Source="{Binding IconPath}"
+                                 Width="24"
+                                 Height="24"
+                                 Margin="0,0,5,0"
+                                 Stretch="Uniform"
+                                 RenderOptions.BitmapScalingMode="HighQuality"/>
+                          <Button Content="..."
+                                  Command="{Binding DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                  CommandParameter="{Binding}"
+                                  Width="24"
+                                  Height="24"
+                                  Padding="0"
+                                  Margin="0,0,5,0"/>
+                          <Button Content="X"
+                                  Command="{Binding DataContext.RemoveIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                  CommandParameter="{Binding}"
+                                  Width="24"
+                                  Height="24"
+                                  Padding="0"
+                                  Margin="0,0,5,0"
+                                  ToolTip="Remove icon"/>
+                        </StackPanel>
+                      </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                  </DataGridTemplateColumn>
+                </DataGrid.Columns>
+              </DataGrid>
+            </ScrollViewer>
+          </Border>
 
-    <CheckBox x:Name="bulkOpenCheckBox"
-              Grid.Row="1"
-              Content="Add additional results to bulk open URLs for items with the same keyword"
-              IsChecked="{Binding AddToBulkOpenUrls, UpdateSourceTrigger=PropertyChanged}"
-              VerticalAlignment="Bottom"
-              HorizontalAlignment="Left"
-              Margin="0,10,0,10"
-              Click="OnCheckBoxClicked" />
+          <CheckBox x:Name="bulkOpenCheckBox"
+                    Grid.Row="1"
+                    Content="Add additional results to bulk open URLs for items with the same keyword"
+                    IsChecked="{Binding AddToBulkOpenUrls, UpdateSourceTrigger=PropertyChanged}"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Left"
+                    Margin="0,10,0,10" />
 
-    <Border Grid.Row="2"
-            Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
-            BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
-            BorderThickness="1"
-            CornerRadius="5"
-            Padding="10"
-            Margin="0,10,0,0">
-      <StackPanel>
-        <TextBlock TextWrapping="Wrap" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}">
-          <Run Text="Search query: " FontWeight="Bold"/>
-          <Run Text="In URL, use {0}, {1}, etc."/>
-        </TextBlock>
-        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}">
-          <Run Text="Usage: " FontWeight="Bold"/>
-          <Run Text="keyword-arg1-arg2... (separated by hyphens)"/>
-        </TextBlock>
-        <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}">
-          <LineBreak/>
-          <Run Text="It also works with bulk open."/>
-        </TextBlock>
-      </StackPanel>
-    </Border>
+          <Border Grid.Row="2"
+                  Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
+                  BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                  BorderThickness="1"
+                  CornerRadius="5"
+                  Padding="10"
+                  Margin="0,10,0,0">
+            
+              <TextBlock TextWrapping="Wrap" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}">
+                <Run Text="See Advanced tab for query arguments guide"/>
+              </TextBlock>
+          </Border>
+        </Grid>
+      </TabItem>
+      
+      <TabItem Header="Advanced">
+        <StackPanel Margin="20">
+          <TextBlock Text="Default Delimiter" FontWeight="SemiBold" Margin="0,0,0,5"/>
+          <TextBox x:Name="DefaultDelimiterTextBox" 
+                   Width="100" 
+                   HorizontalAlignment="Left"
+                   TextChanged="OnDefaultDelimiterChanged"/>
+          
+          <Border Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
+                  BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                  BorderThickness="1"
+                  CornerRadius="5"
+                  Padding="15"
+                  Margin="0,20,0,0">
+            
+            <StackPanel>
+              <TextBlock Text="Usage Guide" FontWeight="Bold" Margin="0,0,0,10"/>
+              
+              <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                <Run Text="Search format: " FontWeight="SemiBold"/>
+                <Run Text="keyword[delimiter]arg1[delimiter]arg2..."/>
+              </TextBlock>
+              
+              <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                <Run Text="In URL: " FontWeight="SemiBold"/>
+                <Run Text="use {0}, {1}, etc. to insert arguments"/>
+              </TextBlock>
+              
+              <TextBlock TextWrapping="Wrap">
+                <Run Text="Note: " FontWeight="SemiBold"/>
+                <Run Text="Leave delimiter empty to use space as separator"/>
+              </TextBlock>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </TabItem>
+    </TabControl>
   </Grid>
 </UserControl>
