@@ -39,7 +39,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                     {
                         item.AddToBulkOpenUrls = value;
                     }
-                    
+
                     OnPropertyChanged(nameof(AddToBulkOpenUrls));
                     SaveSettings();
                 }
@@ -64,13 +64,13 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 var delimiterGroups = SettingsItems
                     .GroupBy(item => item.Delimiter)
                     .OrderByDescending(g => g.Count());
-                
+
                 if (delimiterGroups.Any())
                 {
                     defaultDelimiter = delimiterGroups.First().Key;
                 }
             }
-            
+
             SettingsItems.CollectionChanged += (s, e) =>
             {
                 if (e.NewItems != null)
@@ -108,7 +108,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                     DefaultDelimiterTextBox.Text = defaultDelimiter;
                 }
             }
-            catch {}
+            catch { }
         }
         private void OnDefaultDelimiterChanged(object sender, TextChangedEventArgs e)
         {
@@ -117,23 +117,23 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 if (sender is TextBox textBox)
                 {
                     string newDelimiter = textBox.Text;
-                    
+
                     if (string.IsNullOrEmpty(newDelimiter))
                     {
                         newDelimiter = " ";
                     }
-                    
+
                     defaultDelimiter = newDelimiter;
-                    
+
                     foreach (var item in SettingsItems)
                     {
                         item.Delimiter = defaultDelimiter;
                     }
-                    
+
                     SaveSettings();
                 }
             }
-            catch {}
+            catch { }
         }
 
         private void OnRemoveIcon(object parameter)
@@ -153,7 +153,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                             SettingsItems[index] = selectedItem;
                         }
                     }
-                    catch {}
+                    catch { }
                 });
             }
         }
@@ -164,7 +164,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
         {
             const int maxRetries = 3;
             const int delayMs = 100;
-            
+
             try
             {
                 string settingsFolder = Path.GetDirectoryName(SettingsPath);
@@ -172,7 +172,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 {
                     Directory.CreateDirectory(settingsFolder);
                 }
-                
+
                 var filteredSettingsItems = SettingsItems
                     .Where(item => !string.IsNullOrWhiteSpace(item.Keyword) ||
                                    !string.IsNullOrWhiteSpace(item.Title) ||
@@ -182,16 +182,17 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 string jsonData = JsonSerializer.Serialize(filteredSettingsItems, options);
-                
+
                 Dispatcher.InvokeAsync(async () =>
                 {
                     for (int attempt = 0; attempt < maxRetries; attempt++)
                     {
                         try
                         {
-                            string tempPath = Path.GetTempFileName();
+                            string tempFileName = Path.GetRandomFileName();
+                            string tempPath = Path.Combine(Path.GetTempPath(), tempFileName);
                             await File.WriteAllTextAsync(tempPath, jsonData);
-                            
+
                             if (File.Exists(SettingsPath))
                             {
                                 File.Delete(SettingsPath);
@@ -203,11 +204,11 @@ namespace Flow.Launcher.Plugin.LinkOpener
                         {
                             await Task.Delay(delayMs * (attempt + 1));
                         }
-                        catch {}
+                        catch { }
                     }
                 });
             }
-            catch {}
+            catch { }
         }
         private void OnSelectIcon(object parameter)
         {
@@ -234,7 +235,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                                 SettingsItems[index] = selectedItem;
                             }
                         }
-                        catch {}
+                        catch { }
                     });
                 }
             }

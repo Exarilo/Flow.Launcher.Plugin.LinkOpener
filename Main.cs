@@ -47,7 +47,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 {
                     Directory.CreateDirectory(SettingsFolder);
                 }
-                
+
                 if (File.Exists(SettingsPath))
                 {
                     string jsonData = await File.ReadAllTextAsync(SettingsPath).ConfigureAwait(false);
@@ -69,18 +69,18 @@ namespace Flow.Launcher.Plugin.LinkOpener
         {
             if (string.IsNullOrWhiteSpace(query.Search))
                 return new List<Result>();
-                
+
             string fullSearch = query.Search.Trim().ToLower();
-            
+
             var matchingItems = settingsItems.AsParallel()
                 .Where(item => MatchesSearch(item, fullSearch))
                 .ToList();
-                
+
             if (token.IsCancellationRequested || !matchingItems.Any())
                 return new List<Result>();
-            
+
             var results = new List<Result>();
-            
+
             foreach (var item in matchingItems)
             {
                 try
@@ -94,11 +94,9 @@ namespace Flow.Launcher.Plugin.LinkOpener
                         result.Score = CalculateScore((string)result.ContextData, args);
                     }
                 }
-                catch (Exception ex)
-                {
-                }
+                catch { }
             }
-            
+
             if (token.IsCancellationRequested)
                 return new List<Result>();
             try
@@ -107,8 +105,8 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 if (itemsToBulkOpen.Count > 1)
                 {
                     string searchCopy = fullSearch;
-                    List<string> args = GetAndRemoveArgs(ref searchCopy, itemsToBulkOpen.FirstOrDefault());
-                    
+                    List<string> args = GetAndRemoveArgs(ref searchCopy, itemsToBulkOpen.First());
+
                     var bulkResult = CreateBulkOpenResult(fullSearch, itemsToBulkOpen, args);
                     if (args.Any())
                     {
@@ -118,14 +116,14 @@ namespace Flow.Launcher.Plugin.LinkOpener
                     results.Add(bulkResult);
                 }
             }
-            catch (Exception ex){}
+            catch { }
 
             return results;
         }
 
-        private int CalculateScore(string url, List<string> args)
+        private static int CalculateScore(string url, List<string> args)
         {
-            if (string.IsNullOrEmpty(url) || !args.Any()) 
+            if (string.IsNullOrEmpty(url) || !args.Any())
                 return BASE_SCORE;
 
             int argsUsed = UrlUpdater.CountPlaceholdersUsed(url);
@@ -136,16 +134,16 @@ namespace Flow.Launcher.Plugin.LinkOpener
         {
             if (item == null || string.IsNullOrEmpty(item.Keyword) || string.IsNullOrEmpty(fullSearch))
                 return false;
-                
+
             string searchKeyword = item.Keyword.Trim().ToLower();
             string delimiter = string.IsNullOrWhiteSpace(item.Delimiter) ? " " : item.Delimiter;
-            
-            string[] parts = delimiter == " " 
-                ? fullSearch.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries) 
+
+            string[] parts = delimiter == " "
+                ? fullSearch.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
                 : fullSearch.Split(new[] { delimiter }, StringSplitOptions.None);
-                
+
             if (parts.Length == 0) return false;
-            
+
             string searchText = parts[0].Trim().ToLower();
             return searchText.Equals(searchKeyword, StringComparison.OrdinalIgnoreCase);
         }
@@ -156,7 +154,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             try
             {
                 string delimiter = string.IsNullOrWhiteSpace(item?.Delimiter) ? " " : item.Delimiter;
-                
+
                 if (delimiter == " ")
                 {
                     string[] parts = query.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -170,7 +168,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 {
                     string pattern = $"{Regex.Escape(delimiter)}\\s*([^{Regex.Escape(delimiter)}]+)";
                     TimeSpan timeout = TimeSpan.FromSeconds(3);
-                    
+
                     MatchCollection matches = Regex.Matches(query.Trim(), pattern, RegexOptions.None, timeout);
                     foreach (Match match in matches)
                     {
@@ -184,27 +182,27 @@ namespace Flow.Launcher.Plugin.LinkOpener
                     query = Regex.Replace(query, pattern, "", RegexOptions.None, timeout).Trim();
                 }
             }
-            catch {}
-            
+            catch { }
+
             return args;
         }
 
-        public async Task<Result> CreateResult(SettingItem settingItem, List<string> args)
+        public async Task<Result> CreateResult(SettingItem settingItem, IEnumerable<string> args)
         {
             if (settingItem == null || string.IsNullOrEmpty(settingItem.Url))
                 return null;
-                
-            Uri updatedUri = UrlUpdater.UpdateUrl(settingItem.Url, args);
+
+            Uri updatedUri = UrlUpdater.UpdateUrl(settingItem.Url, args.ToList());
             if (updatedUri == null)
                 return null;
 
             string iconPath;
-            
+
             if (string.IsNullOrEmpty(settingItem.IconPath))
             {
                 Uri faviconUri = new Uri(string.Format(FAVICON_URL_TEMPLATE, updatedUri.Host));
-                iconPath = await IsFaviconAccessible(faviconUri).ConfigureAwait(false) 
-                    ? faviconUri.ToString() 
+                iconPath = await IsFaviconAccessible(faviconUri).ConfigureAwait(false)
+                    ? faviconUri.ToString()
                     : DEFAULT_ICON_PATH;
             }
             else
@@ -250,7 +248,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
         private Result CreateBulkOpenResult(string cleanSearchTerm, IEnumerable<SettingItem> itemsToOpen, List<string> args)
         {
             var items = itemsToOpen.ToList();
-            var argsDisplay = args.Any() ? $" with args: {string.Join(", ", args)}" : "";     
+            var argsDisplay = args.Any() ? $" with args: {string.Join(", ", args)}" : "";
             return new Result
             {
                 Title = $"Bulk Open ({items.Count} items){argsDisplay}",
@@ -270,7 +268,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                                 successCount++;
                             }
                         }
-                        
+
                         return true;
                     }
                     catch
@@ -280,7 +278,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 },
                 IcoPath = DEFAULT_ICON_PATH
             };
-        }        
+        }
         public Control CreateSettingPanel()
         {
             return new LinkSettings(settingsItems, Context);
@@ -294,7 +292,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
         [GeneratedRegex(@"\s+", RegexOptions.None, matchTimeoutMilliseconds: 3000)]
         private static partial Regex WhitespaceRegex();
-       
+
         [GeneratedRegex(@"\{\d+\}", RegexOptions.None, matchTimeoutMilliseconds: 3000)]
         private static partial Regex PlaceholderCountRegex();
 
@@ -302,32 +300,35 @@ namespace Flow.Launcher.Plugin.LinkOpener
         {
             if (string.IsNullOrEmpty(url))
                 return 0;
-                
+
             return PlaceholderCountRegex().Matches(url).Count;
         }
-        
-        public static Uri UpdateUrl(string url, List<string> args)
+
+        public static Uri UpdateUrl(string url, IEnumerable<string> args)
         {
             if (string.IsNullOrEmpty(url))
                 return null;
-                
+
             try
             {
+                var argsList = args.ToList(); 
                 string updatedUrl = PlaceholderRegex().Replace(url, match =>
                 {
-                    if (int.TryParse(match.Groups[1].Value, out int index) && index >= 0 && index < args.Count)
+                    if (int.TryParse(match.Groups[1].Value, out int index) && index >= 0 && index < argsList.Count)
                     {
-                        return Uri.EscapeDataString(args[index]);
+                        return Uri.EscapeDataString(argsList[index]);
                     }
                     return string.Empty;
                 });
+
                 updatedUrl = WhitespaceRegex().Replace(updatedUrl.Trim(), " ");
                 if (Uri.TryCreate(updatedUrl, UriKind.Absolute, out Uri uri))
                 {
                     return uri;
                 }
             }
-            catch {}
+            catch { }
+
             return null;
         }
     }
