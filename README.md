@@ -13,8 +13,6 @@ https://github.com/user-attachments/assets/ba119ed4-a045-4e84-a09c-6345b4abdd8b
 
 # Todo / Ideas
 
-- Add the possibility to choose a delimiter for arguments
-- Add the option to set the first argument without a delimiter and other arguments with one
 - Add the ability to set a keyword/URL directly, without needing to navigate through the settings
 - Check compatibility with portable mode
 - Sort in settings keywords alphabetically
