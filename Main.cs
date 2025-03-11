@@ -143,14 +143,18 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 return fullSearch.TrimStart().ToLower().StartsWith(searchKeyword);
             }
 
-            string[] parts = delimiter == " "
-                ? fullSearch.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                : fullSearch.Split(new[] { delimiter }, StringSplitOptions.None);
+            string firstWord;
+            if (delimiter == " ")
+            {
+                firstWord = fullSearch.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+            }
+            else
+            {
+                int delimiterIndex = fullSearch.IndexOf(delimiter);
+                firstWord = delimiterIndex >= 0 ? fullSearch.Substring(0, delimiterIndex) : fullSearch;
+            }
 
-            if (parts.Length == 0) return false;
-
-            string searchText = parts[0].Trim().ToLower();
-            return searchText.Equals(searchKeyword, StringComparison.OrdinalIgnoreCase);
+            return firstWord.Trim().ToLower().Equals(searchKeyword, StringComparison.OrdinalIgnoreCase);
         }
 
         private static List<string> GetAndRemoveArgs(ref string query, SettingItem item)
@@ -160,7 +164,6 @@ namespace Flow.Launcher.Plugin.LinkOpener
             {
                 string delimiter = string.IsNullOrWhiteSpace(item?.Delimiter) ? " " : item.Delimiter;
                 string keyword = item?.Keyword?.Trim().ToLower() ?? "";
-
                 if (keyword.Contains(" "))
                 {
                     if (query.Trim().ToLower().StartsWith(keyword))
@@ -170,31 +173,19 @@ namespace Flow.Launcher.Plugin.LinkOpener
                         {
                             if (delimiter == " ")
                             {
-                                string[] parts = remainingText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                                args.AddRange(parts);
+                                args.AddRange(remainingText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
                             }
                             else
                             {
-                                string pattern = $"{Regex.Escape(delimiter)}\\s*([^{Regex.Escape(delimiter)}]+)";
-                                TimeSpan timeout = TimeSpan.FromSeconds(3);
-
-                                MatchCollection matches = Regex.Matches(remainingText, pattern, RegexOptions.None, timeout);
-                                foreach (Match match in matches)
-                                {
-                                    string arg = match.Groups[1].Value.Trim();
-                                    if (!string.IsNullOrWhiteSpace(arg))
-                                    {
-                                        args.Add(arg);
-                                    }
-                                }
+                                args.AddRange(remainingText.Split(new[] { delimiter }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(arg => arg.Trim())
+                                    .Where(arg => !string.IsNullOrWhiteSpace(arg)));
                             }
                         }
-
                         query = keyword;
                         return args;
                     }
                 }
-
                 if (delimiter == " ")
                 {
                     string[] parts = query.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -206,20 +197,14 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 }
                 else
                 {
-                    string pattern = $"{Regex.Escape(delimiter)}\\s*([^{Regex.Escape(delimiter)}]+)";
-                    TimeSpan timeout = TimeSpan.FromSeconds(3);
-
-                    MatchCollection matches = Regex.Matches(query.Trim(), pattern, RegexOptions.None, timeout);
-                    foreach (Match match in matches)
+                    string[] parts = query.Split(new[] { delimiter }, StringSplitOptions.None);
+                    if (parts.Length > 1)
                     {
-                        string arg = match.Groups[1].Value.Trim();
-                        if (!string.IsNullOrWhiteSpace(arg))
-                        {
-                            args.Add(arg);
-                        }
+                        query = parts[0].Trim();
+                        args.AddRange(parts.Skip(1)
+                            .Select(arg => arg.Trim())
+                            .Where(arg => !string.IsNullOrWhiteSpace(arg)));
                     }
-
-                    query = Regex.Replace(query, pattern, "", RegexOptions.None, timeout).Trim();
                 }
             }
             catch { }
