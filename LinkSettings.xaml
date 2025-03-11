@@ -88,6 +88,10 @@
                         GridLinesVisibility="Horizontal"
                         BorderThickness="0"
                         RowHeaderWidth="0"
+                        IsReadOnly="False"
+                        SelectionMode="Extended"
+                        SelectionUnit="FullRow"
+                        EnableRowVirtualization="True"
                         ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
                         CellStyle="{StaticResource DataGridCellStyle}"
                         Height="300">
