@@ -20,7 +20,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             {
                 if (keyword != value)
                 {
-                    keyword = value?.Trim() ?? string.Empty;
+                    keyword = value ?? string.Empty;
                     OnPropertyChanged(nameof(Keyword));
                 }
             }
@@ -60,7 +60,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             {
                 if (delimiter != value)
                 {
-                    delimiter = value?.Trim() ?? "-";
+                    delimiter = value ?? "-";
                     OnPropertyChanged(nameof(Delimiter));
                 }
             }

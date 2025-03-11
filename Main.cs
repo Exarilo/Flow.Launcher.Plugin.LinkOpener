@@ -138,6 +138,11 @@ namespace Flow.Launcher.Plugin.LinkOpener
             string searchKeyword = item.Keyword.Trim().ToLower();
             string delimiter = string.IsNullOrWhiteSpace(item.Delimiter) ? " " : item.Delimiter;
 
+            if (searchKeyword.Contains(" "))
+            {
+                return fullSearch.TrimStart().ToLower().StartsWith(searchKeyword);
+            }
+
             string[] parts = delimiter == " "
                 ? fullSearch.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
                 : fullSearch.Split(new[] { delimiter }, StringSplitOptions.None);
@@ -154,6 +159,41 @@ namespace Flow.Launcher.Plugin.LinkOpener
             try
             {
                 string delimiter = string.IsNullOrWhiteSpace(item?.Delimiter) ? " " : item.Delimiter;
+                string keyword = item?.Keyword?.Trim().ToLower() ?? "";
+
+                if (keyword.Contains(" "))
+                {
+                    if (query.Trim().ToLower().StartsWith(keyword))
+                    {
+                        string remainingText = query.Substring(keyword.Length).Trim();
+                        if (!string.IsNullOrWhiteSpace(remainingText))
+                        {
+                            if (delimiter == " ")
+                            {
+                                string[] parts = remainingText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                args.AddRange(parts);
+                            }
+                            else
+                            {
+                                string pattern = $"{Regex.Escape(delimiter)}\\s*([^{Regex.Escape(delimiter)}]+)";
+                                TimeSpan timeout = TimeSpan.FromSeconds(3);
+
+                                MatchCollection matches = Regex.Matches(remainingText, pattern, RegexOptions.None, timeout);
+                                foreach (Match match in matches)
+                                {
+                                    string arg = match.Groups[1].Value.Trim();
+                                    if (!string.IsNullOrWhiteSpace(arg))
+                                    {
+                                        args.Add(arg);
+                                    }
+                                }
+                            }
+                        }
+
+                        query = keyword;
+                        return args;
+                    }
+                }
 
                 if (delimiter == " ")
                 {
@@ -311,7 +351,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
             try
             {
-                var argsList = args.ToList(); 
+                var argsList = args.ToList();
                 string updatedUrl = PlaceholderRegex().Replace(url, match =>
                 {
                     if (int.TryParse(match.Groups[1].Value, out int index) && index >= 0 && index < argsList.Count)
