@@ -154,7 +154,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 firstWord = delimiterIndex >= 0 ? fullSearch.Substring(0, delimiterIndex) : fullSearch;
             }
 
-            return firstWord.Trim().ToLower().Equals(searchKeyword, StringComparison.OrdinalIgnoreCase);
+            return firstWord.Trim().ToLower().StartsWith(searchKeyword, StringComparison.OrdinalIgnoreCase);
         }
 
         private static List<string> GetAndRemoveArgs(ref string query, SettingItem item)
