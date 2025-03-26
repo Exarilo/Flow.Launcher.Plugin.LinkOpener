@@ -71,17 +71,84 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 return new List<Result>();
 
             string fullSearch = query.Search.Trim().ToLower();
+            string[] searchParts = fullSearch.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            bool hasArgs = searchParts.Length > 1;
+            string potentialKeyword = searchParts.Length > 0 ? searchParts[0] : fullSearch;
+            string remainingSearch = hasArgs ? string.Join(" ", searchParts.Skip(1)).ToLower() : "";
 
-            var matchingItems = settingsItems.AsParallel()
-                .Where(item => MatchesSearch(item, fullSearch))
+            var keywordMatches = settingsItems.AsParallel()
+                .Where(item => {
+                    string keyword = item.Keyword.Trim().ToLower();
+                    if (keyword.Contains(" "))
+                    {
+                        return fullSearch.TrimStart().ToLower().StartsWith(keyword);
+                    }
+                    
+                    string delimiter = string.IsNullOrWhiteSpace(item.Delimiter) ? " " : item.Delimiter;
+                    return keyword == potentialKeyword || 
+                           fullSearch.StartsWith(keyword + delimiter);
+                })
                 .ToList();
 
-            if (token.IsCancellationRequested || !matchingItems.Any())
+            if (!keywordMatches.Any() && !hasArgs)
+            {
+                keywordMatches = settingsItems.AsParallel()
+                    .Where(item => {
+                        string keyword = item.Keyword.Trim().ToLower();
+                        return keyword.StartsWith(potentialKeyword);
+                    })
+                    .ToList();
+            }
+
+            if (token.IsCancellationRequested || !keywordMatches.Any())
                 return new List<Result>();
+
+            var filteredItems = keywordMatches;
+            
+           if (hasArgs && !string.IsNullOrEmpty(remainingSearch))
+            {
+                filteredItems = keywordMatches
+                    .Where(item => {
+                        string itemTitle = item.Title.ToLower();
+                        return itemTitle.Contains(remainingSearch);
+                    })
+                    .ToList();
+
+                 if (!filteredItems.Any())
+                {
+                    filteredItems = keywordMatches
+                        .Where(item => UrlUpdater.CountPlaceholdersUsed(item.Url) > 0)
+                        .ToList();
+                }
+            }
+            else
+            {
+                foreach (var item in keywordMatches.ToList())
+                {
+                    string delimiter = string.IsNullOrWhiteSpace(item.Delimiter) ? " " : item.Delimiter;
+                    
+                    if (delimiter != " " && fullSearch.Contains(delimiter))
+                    {
+                        string searchCopy = fullSearch;
+                        List<string> args = GetAndRemoveArgs(ref searchCopy, item);
+                        
+                        if (args.Any())
+                        {
+                            string argsJoined = string.Join(" ", args).ToLower();
+                            string itemTitle = item.Title.ToLower();
+                            
+                            if (!itemTitle.Contains(argsJoined) && UrlUpdater.CountPlaceholdersUsed(item.Url) == 0)
+                            {
+                                filteredItems.Remove(item);
+                            }
+                        }
+                    }
+                }
+            }
 
             var results = new List<Result>();
 
-            foreach (var item in matchingItems)
+            foreach (var item in filteredItems)
             {
                 try
                 {
@@ -99,14 +166,17 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
             if (token.IsCancellationRequested)
                 return new List<Result>();
+
             try
             {
-                var itemsToBulkOpen = matchingItems.Where(x => x.AddToBulkOpenUrls).ToList();
+                var itemsToBulkOpen = keywordMatches.Where(x => x.AddToBulkOpenUrls).ToList();
                 if (itemsToBulkOpen.Count > 1)
                 {
                     string searchCopy = fullSearch;
-                    List<string> args = GetAndRemoveArgs(ref searchCopy, itemsToBulkOpen.First());
-
+                    
+                    var firstItem = itemsToBulkOpen.First();
+                    List<string> args = GetAndRemoveArgs(ref searchCopy, firstItem);
+                    
                     var bulkResult = CreateBulkOpenResult(fullSearch, itemsToBulkOpen, args);
                     if (args.Any())
                     {
@@ -143,18 +213,30 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 return fullSearch.TrimStart().ToLower().StartsWith(searchKeyword);
             }
 
-            string firstWord;
             if (delimiter == " ")
             {
-                firstWord = fullSearch.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+                string[] parts = fullSearch.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 0)
+                    return false;
+                
+                if (parts.Length > 1)
+                    return parts[0].Trim().ToLower() == searchKeyword;
+                else
+                    return parts[0].Trim().ToLower().StartsWith(searchKeyword);
             }
             else
             {
                 int delimiterIndex = fullSearch.IndexOf(delimiter);
-                firstWord = delimiterIndex >= 0 ? fullSearch.Substring(0, delimiterIndex) : fullSearch;
+                if (delimiterIndex >= 0)
+                {
+                    string firstPart = fullSearch.Substring(0, delimiterIndex).Trim().ToLower();
+                    return firstPart == searchKeyword;
+                }
+                else
+                {
+                    return fullSearch.Trim().ToLower().StartsWith(searchKeyword);
+                }
             }
-
-            return firstWord.Trim().ToLower().StartsWith(searchKeyword, StringComparison.OrdinalIgnoreCase);
         }
 
         private static List<string> GetAndRemoveArgs(ref string query, SettingItem item)
