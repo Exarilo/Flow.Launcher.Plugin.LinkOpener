@@ -255,7 +255,8 @@ namespace Flow.Launcher.Plugin.LinkOpener
                         {
                             if (delimiter == " ")
                             {
-                                args.AddRange(remainingText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+                       
+                                args.Add(remainingText);
                             }
                             else
                             {
@@ -273,8 +274,16 @@ namespace Flow.Launcher.Plugin.LinkOpener
                     string[] parts = query.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length > 1)
                     {
-                        args.AddRange(parts.Skip(1));
-                        query = parts[0];
+                   
+                        string firstPart = parts[0];
+                        string remainingParts = query.Substring(firstPart.Length).Trim();
+
+                        if (!string.IsNullOrWhiteSpace(remainingParts))
+                        {
+                            args.Add(remainingParts);
+                        }
+
+                        query = firstPart;
                     }
                 }
                 else
