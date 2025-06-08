@@ -64,11 +64,8 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 var delimiterGroups = SettingsItems
                     .GroupBy(item => item.Delimiter)
                     .OrderByDescending(g => g.Count());
-
-                if (delimiterGroups.Any())
-                {
                     defaultDelimiter = delimiterGroups.First().Key;
-                }
+                
             }
 
             SettingsItems.CollectionChanged += (s, e) =>

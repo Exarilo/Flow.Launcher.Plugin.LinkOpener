@@ -126,7 +126,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return clone;
         }
 
-        private string[] ExtractParts(string remainingSearch, SettingItem match)
+        private static string[] ExtractParts(string remainingSearch, SettingItem match)
         {
             var placeholderCount = UrlUpdater.CountPlaceholdersUsed(match.Url);
 
@@ -146,7 +146,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 .ToArray();
         }
 
-        private SettingItem ProcessPlaceholderWithoutDelimiter(SettingItem item)
+        private static SettingItem ProcessPlaceholderWithoutDelimiter(SettingItem item)
         {
             var clone = item.Clone();
             clone.Url = UrlUpdater.UpdateUrl(clone.Url, Array.Empty<string>())?.AbsoluteUri;
@@ -207,7 +207,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             };
         }
 
-        private async Task<string> GetIconPathAsync(SettingItem settingItem, Uri uri, CancellationToken token)
+        private static async Task<string> GetIconPathAsync(SettingItem settingItem, Uri uri, CancellationToken token)
         {
             if (!string.IsNullOrEmpty(settingItem.IconPath))
                 return settingItem.IconPath;
@@ -224,7 +224,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return iconPath;
         }
 
-        private int CalculateScore(SettingItem settingItem, string fullSearch)
+        private static int CalculateScore(SettingItem settingItem, string fullSearch)
         {
             var searchAfterKeyword = fullSearch.Length >= settingItem.Keyword.Length
                 ? fullSearch.Substring(settingItem.Keyword.Length).Trim()
@@ -237,8 +237,8 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 return BASE_SCORE;
 
             var distance = Levenshtein.GetDistance(
-                searchAfterKeyword.Substring(0, minLength),
-                titleLower.Substring(0, minLength)
+                searchAfterKeyword.AsSpan(0, minLength),
+                titleLower.AsSpan(0, minLength)
             );
 
             return BASE_SCORE + (minLength - distance) * SIMILARITY_MULTIPLIER;
