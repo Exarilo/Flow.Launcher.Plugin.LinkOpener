@@ -12,6 +12,19 @@ namespace Flow.Launcher.Plugin.LinkOpener
         private bool addToBulkOpenUrls;
         private string delimiter = "-";
 
+        public SettingItem Clone()
+        {
+            return new SettingItem
+            {
+                Keyword = this.Keyword,
+                Title = this.Title,
+                Url = this.Url,
+                IconPath = this.IconPath,
+                AddToBulkOpenUrls = this.AddToBulkOpenUrls,
+                Delimiter = this.Delimiter
+            };
+        }
+
         [JsonPropertyName("Keyword")]
         public string Keyword
         {

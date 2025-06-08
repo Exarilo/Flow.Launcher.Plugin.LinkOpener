@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Flow.Launcher.Plugin" Version="4.1.0" />
+    <PackageReference Include="Quickenshtein" Version="1.5.1" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="LinkSettings.xaml" />
