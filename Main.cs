@@ -115,7 +115,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 .Concat(updatedItems);
         }
 
-        private SettingItem ProcessPlaceholderWithDelimiter(SettingItem match, string fullSearch)
+        private static SettingItem ProcessPlaceholderWithDelimiter(SettingItem match, string fullSearch)
         {
             var clone = match.Clone();
             var remainingSearch = fullSearch.Substring(match.Keyword.Length).Trim();
