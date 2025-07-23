@@ -89,8 +89,9 @@ namespace Flow.Launcher.Plugin.LinkOpener
             if (string.IsNullOrWhiteSpace(query.Search))
                 return new List<Result>();
 
-            var fullSearch = query.Search.Trim().ToLower();
-            var matchingSettings = settingsItems.WhereSearchStartWithKeyword(fullSearch);
+            var fullSearch = query.Search.Trim();
+            var fullSearchLower = fullSearch.ToLower();
+            var matchingSettings = settingsItems.WhereSearchStartWithKeyword(fullSearchLower);
             var settingsByMatchType = matchingSettings.ClassifyByPlaceholderUsage(fullSearch);
 
             var processedItems = ProcessSettingItems(settingsByMatchType, fullSearch);
