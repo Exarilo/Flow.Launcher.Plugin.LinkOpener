@@ -98,7 +98,12 @@
                   <DataGridTextColumn Header="Keyword" Binding="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}" Width="Auto"/>
                   <DataGridTextColumn Header="Title" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Width="Auto" />
                   <DataGridTextColumn Header="URL" Binding="{Binding Url, UpdateSourceTrigger=PropertyChanged}" Width="*" />
-                <DataGridTemplateColumn Header="Icon" Width="130">
+                  <DataGridCheckBoxColumn Binding="{Binding IsPrivateMode, UpdateSourceTrigger=PropertyChanged}" Width="Auto">
+                    <DataGridCheckBoxColumn.Header>
+                      <TextBlock Text="Private mode" ToolTip="Private mode is only available if enabled in General > Default Web Browser settings."/>                  
+                    </DataGridCheckBoxColumn.Header>
+                  </DataGridCheckBoxColumn>
+                  <DataGridTemplateColumn Header="Icon" Width="130">
                   <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
                       <StackPanel Orientation="Horizontal" VerticalAlignment="Center">

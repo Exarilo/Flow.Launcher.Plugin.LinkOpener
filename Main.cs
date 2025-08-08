@@ -32,7 +32,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
         private const string SETTINGS_FILENAME = "Settings.json";
         private const string FAVICON_URL_TEMPLATE = "https://www.google.com/s2/favicons?domain_url={0}&sz=48";
         private const string DEFAULT_ICON_PATH = "Images\\app.png";
-        private static readonly HttpClient _httpClient = new HttpClient{Timeout = TimeSpan.FromSeconds(5)};
+        private static readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
         private static readonly ConcurrentDictionary<string, string> _faviconCache = new();
         private string _settingsFolder;
         private string _settingsPath;
@@ -154,9 +154,9 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return clone;
         }
 
-        private async Task<List<Result>> CreateResultsAsync(IEnumerable<SettingItem> finalItems,string fullSearch,CancellationToken token)
+        private async Task<List<Result>> CreateResultsAsync(IEnumerable<SettingItem> finalItems, string fullSearch, CancellationToken token)
         {
-            var semaphore = new SemaphoreSlim(10, 10); 
+            var semaphore = new SemaphoreSlim(10, 10);
             var tasks = finalItems.Select(async item =>
             {
                 if (token.IsCancellationRequested)
@@ -202,7 +202,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 Title = settingItem.Title,
                 SubTitle = uri.ToString(),
                 Score = score,
-                Action = _ => TryOpenUrl(uri),
+                Action = _ => TryOpenUrl(uri, settingItem.IsPrivateMode),
                 IcoPath = iconPath,
                 ContextData = settingItem.Url
             };
@@ -245,11 +245,11 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return BASE_SCORE + (minLength - distance) * SIMILARITY_MULTIPLIER;
         }
 
-        private bool TryOpenUrl(Uri uri)
+        private bool TryOpenUrl(Uri uri, bool isPrivateMode)
         {
             try
             {
-                Context.API.OpenUrl(uri);
+                Context.API.OpenUrl(uri, isPrivateMode);
                 return true;
             }
             catch
@@ -291,7 +291,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 {
                     if (Uri.TryCreate(item.Url, UriKind.Absolute, out var uri))
                     {
-                        Context.API.OpenUrl(uri);
+                        Context.API.OpenUrl(uri, item.IsPrivateMode);
                     }
                 }
                 return true;
