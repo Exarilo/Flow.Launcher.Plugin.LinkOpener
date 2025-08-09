@@ -11,6 +11,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
         private string iconPath = string.Empty;
         private bool addToBulkOpenUrls;
         private string delimiter = "-";
+        private bool isPrivateMode;
 
         public SettingItem Clone()
         {
@@ -19,6 +20,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 Keyword = this.Keyword,
                 Title = this.Title,
                 Url = this.Url,
+                isPrivateMode = this.IsPrivateMode,
                 IconPath = this.IconPath,
                 AddToBulkOpenUrls = this.AddToBulkOpenUrls,
                 Delimiter = this.Delimiter
@@ -61,6 +63,20 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 {
                     url = value?.Trim() ?? string.Empty;
                     OnPropertyChanged(nameof(Url));
+                }
+            }
+        }
+
+        [JsonPropertyName("IsPrivateMode")]
+        public bool IsPrivateMode
+        {
+            get => isPrivateMode;
+            set
+            {
+                if (isPrivateMode != value)
+                {
+                    isPrivateMode = value;
+                    OnPropertyChanged(nameof(IsPrivateMode));
                 }
             }
         }
