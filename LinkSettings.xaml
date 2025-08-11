@@ -163,14 +163,14 @@
                         Grid.Row="2"
                         Margin="0 10 0 0"
                         Padding="10"
-                        Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
-                        BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                        Background="{DynamicResource Color12B}"
+                        BorderBrush="{DynamicResource Color03B}"
                         BorderThickness="1"
                         CornerRadius="5">
 
                         <TextBlock
                             Margin="0 0 0 5"
-                            Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                            Foreground="{DynamicResource BasicLabelColor}"
                             TextWrapping="Wrap">
                             <Run Text="See Advanced tab for query arguments guide" />
                         </TextBlock>
@@ -193,8 +193,8 @@
                     <Border
                         Margin="0 20 0 0"
                         Padding="15"
-                        Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
-                        BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                        Background="{DynamicResource Color12B}"
+                        BorderBrush="{DynamicResource Color03B}"
                         BorderThickness="1"
                         CornerRadius="5">
 
@@ -206,7 +206,7 @@
 
                             <TextBlock Margin="0 0 0 10" TextWrapping="Wrap">
                                 <Run FontWeight="SemiBold" Text="Search format: " />
-                                <Run Text="keyword[delimiter]arg1[delimiter]arg2..." />
+                                <Run Text="keyword [delimiter] arg1 [delimiter] arg2, ..." />
                             </TextBlock>
 
                             <TextBlock Margin="0 0 0 10" TextWrapping="Wrap">
