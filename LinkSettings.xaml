@@ -91,9 +91,9 @@
               ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
               CellStyle="{StaticResource DataGridCellStyle}"
               HorizontalAlignment="Stretch"
-              Height="370"
-              ScrollViewer.VerticalScrollBarVisibility="Auto"
-              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+              VerticalScrollBarVisibility="Disabled"
+              PreviewMouseWheel="DataGrid_PreviewMouseWheel"
+              >
               <DataGrid.Columns>
                   <DataGridTextColumn Header="Keyword" Binding="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}" Width="Auto"/>
                   <DataGridTextColumn Header="Title" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Width="Auto" />
