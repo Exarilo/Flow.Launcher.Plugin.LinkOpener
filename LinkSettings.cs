@@ -1,14 +1,14 @@
+using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Microsoft.Win32;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Flow.Launcher.Plugin.LinkOpener
 {
@@ -64,8 +64,8 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 var delimiterGroups = SettingsItems
                     .GroupBy(item => item.Delimiter)
                     .OrderByDescending(g => g.Count());
-                    defaultDelimiter = delimiterGroups.First().Key;
-                
+                defaultDelimiter = delimiterGroups.First().Key;
+
             }
 
             SettingsItems.CollectionChanged += (s, e) =>

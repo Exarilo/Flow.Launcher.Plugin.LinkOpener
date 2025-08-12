@@ -8,193 +8,221 @@
     d:DesignWidth="800"
     mc:Ignorable="d">
 
-  <UserControl.Resources>
-    <Style x:Key="DataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
-      <Setter Property="Padding" Value="10,8"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-      <Setter Property="FontSize" Value="14"/>
-      <Setter Property="BorderThickness" Value="0,0,1,0"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="DataGridColumnHeader">
-            <Grid>
-              <Border Padding="{TemplateBinding Padding}"
-                      BorderBrush="{TemplateBinding BorderBrush}"
-                      BorderThickness="{TemplateBinding BorderThickness}"
-                      Background="{TemplateBinding Background}">
-                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-              </Border>
-            </Grid>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style>
+    <UserControl.Resources>
+        <Style x:Key="DataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Padding" Value="10 8" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="BorderThickness" Value="0 0 1 0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Grid>
+                            <Border
+                                Padding="{TemplateBinding Padding}"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-    <Style x:Key="DataGridCellStyle" TargetType="DataGridCell">
-      <Setter Property="Padding" Value="5"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="DataGridCell">
-            <Border Padding="{TemplateBinding Padding}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="{TemplateBinding BorderThickness}"
-                    Background="{TemplateBinding Background}"
-                    SnapsToDevicePixels="True">
-              <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-            </Border>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style>
+        <Style x:Key="DataGridCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border
+                            Padding="{TemplateBinding Padding}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            SnapsToDevicePixels="True">
+                            <ContentPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-    <Style x:Key="OptionGroupStyle" TargetType="GroupBox">
-      <Setter Property="Margin" Value="0,10,0,0"/>
-      <Setter Property="Padding" Value="10"/>
-      <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-    </Style>
+        <Style x:Key="OptionGroupStyle" TargetType="GroupBox">
+            <Setter Property="Margin" Value="0 10 0 0" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
 
-    <Style x:Key="OptionLabelStyle" TargetType="TextBlock">
-      <Setter Property="Margin" Value="0,5,0,2"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-    </Style>
-  </UserControl.Resources>
+        <Style x:Key="OptionLabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0 5 0 2" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </UserControl.Resources>
 
-  <Grid Margin="20">
-    <TabControl>
-      <TabItem Header="Basic">
-        <Grid>
-          <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-          </Grid.RowDefinitions>
-          <Border Grid.Row="0"
-                  BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
-                  BorderThickness="1"
-                  CornerRadius="5">
-            <DataGrid x:Name="dataGrid"
-              AutoGenerateColumns="False"
-                        ItemsSource="{Binding SettingsItems}"
-              CanUserAddRows="True"
-              CanUserDeleteRows="True"
-              CanUserSortColumns="True"
-              HeadersVisibility="Column"
-              GridLinesVisibility="All"
-              BorderThickness="0"
-              RowHeaderWidth="0"
-              IsReadOnly="False"
-              SelectionMode="Extended"
-              SelectionUnit="FullRow"
-              EnableRowVirtualization="True"
-              ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
-              CellStyle="{StaticResource DataGridCellStyle}"
-              HorizontalAlignment="Stretch"
-              Height="370"
-              ScrollViewer.VerticalScrollBarVisibility="Auto"
-              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-              <DataGrid.Columns>
-                  <DataGridTextColumn Header="Keyword" Binding="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}" Width="Auto"/>
-                  <DataGridTextColumn Header="Title" Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}" Width="Auto" />
-                  <DataGridTextColumn Header="URL" Binding="{Binding Url, UpdateSourceTrigger=PropertyChanged}" Width="*" />
-                  <DataGridCheckBoxColumn Binding="{Binding IsPrivateMode, UpdateSourceTrigger=PropertyChanged}" Width="Auto">
-                    <DataGridCheckBoxColumn.Header>
-                      <TextBlock Text="Private mode" ToolTip="Private mode is only available if enabled in General > Default Web Browser settings."/>                  
-                    </DataGridCheckBoxColumn.Header>
-                  </DataGridCheckBoxColumn>
-                  <DataGridTemplateColumn Header="Icon" Width="130">
-                  <DataGridTemplateColumn.CellTemplate>
-                    <DataTemplate>
-                      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Image Source="{Binding IconPath}"
-                   Width="24"
-                   Height="24"
-                   Margin="0,0,5,0"
-                   Stretch="Uniform"
-                   RenderOptions.BitmapScalingMode="HighQuality"/>
-                        <Button Content="..."
-                    Command="{Binding DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                    CommandParameter="{Binding}"
-                    Width="24"
-                    Height="24"
-                    Padding="0"
-                    Margin="0,0,5,0"/>
-                        <Button Content="X"
-                    Command="{Binding DataContext.RemoveIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                    CommandParameter="{Binding}"
-                    Width="24"
-                    Height="24"
-                    Padding="0"
-                    Margin="0,0,5,0"
-                    ToolTip="Remove icon"/>
-                      </StackPanel>
-                    </DataTemplate>
-                  </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-              </DataGrid.Columns>
-            </DataGrid>
-          </Border>
+    <Grid Margin="20">
+        <TabControl>
+            <TabItem Header="Basic">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border
+                        Grid.Row="0"
+                        BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                        BorderThickness="1"
+                        CornerRadius="5">
+                        <DataGrid
+                            x:Name="dataGrid"
+                            Height="400"
+                            HorizontalAlignment="Stretch"
+                            AutoGenerateColumns="False"
+                            BorderThickness="0"
+                            CanUserAddRows="True"
+                            CanUserDeleteRows="True"
+                            CanUserSortColumns="True"
+                            CellStyle="{StaticResource DataGridCellStyle}"
+                            ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
+                            EnableRowVirtualization="True"
+                            GridLinesVisibility="All"
+                            HeadersVisibility="Column"
+                            IsReadOnly="False"
+                            ItemsSource="{Binding SettingsItems}"
+                            RowHeaderWidth="0"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            SelectionMode="Extended"
+                            SelectionUnit="FullRow">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn
+                                    Width="Auto"
+                                    Binding="{Binding Keyword, UpdateSourceTrigger=PropertyChanged}"
+                                    Header="Keyword" />
+                                <DataGridTextColumn
+                                    Width="Auto"
+                                    Binding="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
+                                    Header="Title" />
+                                <DataGridTextColumn
+                                    Width="*"
+                                    Binding="{Binding Url, UpdateSourceTrigger=PropertyChanged}"
+                                    Header="URL" />
+                                <DataGridCheckBoxColumn Width="Auto" Binding="{Binding IsPrivateMode, UpdateSourceTrigger=PropertyChanged}">
+                                    <DataGridCheckBoxColumn.Header>
+                                        <TextBlock Text="Private mode" ToolTip="Private mode is only available if enabled in General &gt; Default Web Browser settings." />
+                                    </DataGridCheckBoxColumn.Header>
+                                </DataGridCheckBoxColumn>
+                                <DataGridTemplateColumn Width="130" Header="Icon">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                                                <Image
+                                                    Width="24"
+                                                    Height="24"
+                                                    Margin="0 0 5 0"
+                                                    RenderOptions.BitmapScalingMode="HighQuality"
+                                                    Source="{Binding IconPath}"
+                                                    Stretch="Uniform" />
+                                                <Button
+                                                    Width="24"
+                                                    Height="24"
+                                                    Margin="0 0 5 0"
+                                                    Padding="0"
+                                                    Command="{Binding DataContext.SelectIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="..." />
+                                                <Button
+                                                    Width="24"
+                                                    Height="24"
+                                                    Margin="0 0 5 0"
+                                                    Padding="0"
+                                                    Command="{Binding DataContext.RemoveIconCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="X"
+                                                    ToolTip="Remove icon" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
 
-          <CheckBox x:Name="bulkOpenCheckBox"
-                    Grid.Row="1"
-                    Content="Add additional results to bulk open URLs for items with the same keyword"
-                    IsChecked="{Binding AddToBulkOpenUrls, UpdateSourceTrigger=PropertyChanged}"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Left"
-                    Margin="0,10,0,10" />
+                    <CheckBox
+                        x:Name="bulkOpenCheckBox"
+                        Grid.Row="1"
+                        Margin="0 10 0 10"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Bottom"
+                        Content="Add additional results to bulk open URLs for items with the same keyword"
+                        IsChecked="{Binding AddToBulkOpenUrls, UpdateSourceTrigger=PropertyChanged}" />
 
-          <Border Grid.Row="2"
-                  Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
-                  BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
-                  BorderThickness="1"
-                  CornerRadius="5"
-                  Padding="10"
-                  Margin="0,10,0,0">
+                    <Border
+                        Grid.Row="2"
+                        Margin="0 10 0 0"
+                        Padding="10"
+                        Background="{DynamicResource Color12B}"
+                        BorderBrush="{DynamicResource Color03B}"
+                        BorderThickness="1"
+                        CornerRadius="5">
 
-            <TextBlock TextWrapping="Wrap" Margin="0,0,0,5" Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}">
-              <Run Text="See Advanced tab for query arguments guide"/>
-            </TextBlock>
-          </Border>
-        </Grid>
-      </TabItem>
+                        <TextBlock
+                            Margin="0 0 0 5"
+                            Foreground="{DynamicResource BasicLabelColor}"
+                            TextWrapping="Wrap">
+                            <Run Text="See Advanced tab for query arguments guide" />
+                        </TextBlock>
+                    </Border>
+                </Grid>
+            </TabItem>
 
-      <TabItem Header="Advanced">
-        <StackPanel Margin="20">
-          <TextBlock Text="Default Delimiter" FontWeight="SemiBold" Margin="0,0,0,5"/>
-          <TextBox x:Name="DefaultDelimiterTextBox"
-                   Width="100"
-                   HorizontalAlignment="Left"
-                   TextChanged="OnDefaultDelimiterChanged"/>
+            <TabItem Header="Advanced">
+                <StackPanel Margin="20">
+                    <TextBlock
+                        Margin="0 0 0 5"
+                        FontWeight="SemiBold"
+                        Text="Default Delimiter" />
+                    <TextBox
+                        x:Name="DefaultDelimiterTextBox"
+                        Width="100"
+                        HorizontalAlignment="Left"
+                        TextChanged="OnDefaultDelimiterChanged" />
 
-          <Border Background="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}"
-                  BorderBrush="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
-                  BorderThickness="1"
-                  CornerRadius="5"
-                  Padding="15"
-                  Margin="0,20,0,0">
+                    <Border
+                        Margin="0 20 0 0"
+                        Padding="15"
+                        Background="{DynamicResource Color12B}"
+                        BorderBrush="{DynamicResource Color03B}"
+                        BorderThickness="1"
+                        CornerRadius="5">
 
-            <StackPanel>
-              <TextBlock Text="Usage Guide" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <StackPanel>
+                            <TextBlock
+                                Margin="0 0 0 10"
+                                FontWeight="Bold"
+                                Text="Usage Guide" />
 
-              <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                <Run Text="Search format: " FontWeight="SemiBold"/>
-                <Run Text="keyword[delimiter]arg1[delimiter]arg2..."/>
-              </TextBlock>
+                            <TextBlock Margin="0 0 0 10" TextWrapping="Wrap">
+                                <Run FontWeight="SemiBold" Text="Search format: " />
+                                <Run Text="keyword [delimiter] arg1 [delimiter] arg2, ..." />
+                            </TextBlock>
 
-              <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
-                <Run Text="In URL: " FontWeight="SemiBold"/>
-                <Run Text="use {0}, {1}, etc. to insert arguments"/>
-              </TextBlock>
+                            <TextBlock Margin="0 0 0 10" TextWrapping="Wrap">
+                                <Run FontWeight="SemiBold" Text="In URL: " />
+                                <Run Text="use {0}, {1}, etc. to insert arguments" />
+                            </TextBlock>
 
-              <TextBlock TextWrapping="Wrap">
-                <Run Text="Note: " FontWeight="SemiBold"/>
-                <Run Text="Leave delimiter empty to use space as separator"/>
-              </TextBlock>
-            </StackPanel>
-          </Border>
-        </StackPanel>
-      </TabItem>
-    </TabControl>
-  </Grid>
+                            <TextBlock TextWrapping="Wrap">
+                                <Run FontWeight="SemiBold" Text="Note: " />
+                                <Run Text="Leave delimiter empty to use space as separator" />
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </Grid>
 </UserControl>
