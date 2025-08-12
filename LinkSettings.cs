@@ -238,26 +238,6 @@ namespace Flow.Launcher.Plugin.LinkOpener
             }
         }
 
-        private void DataGrid_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            // Forward mouse wheel events from the DataGrid to its parent container
-            // so that Flow Launcher handles scrolling instead of the DataGrid swallowing the event.
-            if (!e.Handled)
-            {
-                e.Handled = true;
-
-                if (((Control)sender)?.Parent is UIElement parent)
-                {
-                    parent.RaiseEvent(
-                        new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
-                        {
-                            RoutedEvent = UIElement.MouseWheelEvent,
-                            Source = sender
-                        });
-                }
-            }
-        }
-
         public class RelayCommand : ICommand
         {
             private readonly Action<object> _execute;

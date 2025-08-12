@@ -78,6 +78,7 @@
                         CornerRadius="5">
                         <DataGrid
                             x:Name="dataGrid"
+                            Height="400"
                             HorizontalAlignment="Stretch"
                             AutoGenerateColumns="False"
                             BorderThickness="0"
@@ -91,11 +92,11 @@
                             HeadersVisibility="Column"
                             IsReadOnly="False"
                             ItemsSource="{Binding SettingsItems}"
-                            PreviewMouseWheel="DataGrid_PreviewMouseWheel"
                             RowHeaderWidth="0"
+                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
                             SelectionMode="Extended"
-                            SelectionUnit="FullRow"
-                            VerticalScrollBarVisibility="Disabled">
+                            SelectionUnit="FullRow">
                             <DataGrid.Columns>
                                 <DataGridTextColumn
                                     Width="Auto"
