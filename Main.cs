@@ -101,7 +101,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return results;
         }
 
-        private IEnumerable<SettingItem> ProcessSettingItems(
+        private static IEnumerable<SettingItem> ProcessSettingItems(
             ILookup<SettingMatchType, SettingItem> settingsByMatchType,
             string fullSearch)
         {

@@ -111,6 +111,8 @@ namespace Flow.Launcher.Plugin.LinkOpener
 
         private void DataGrid_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
+            const double epsilon = 0.1;
+
             if (sender is DataGrid dg)
             {
                 var sv = FindVisualChild<ScrollViewer>(dg);
@@ -118,9 +120,8 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 {
                     bool scrollUp = e.Delta > 0;
                     bool scrollDown = e.Delta < 0;
-
-                    bool atTop = sv.VerticalOffset == 0;
-                    bool atBottom = sv.VerticalOffset >= sv.ScrollableHeight;
+                    bool atTop = sv.VerticalOffset <= epsilon;
+                    bool atBottom = sv.VerticalOffset >= sv.ScrollableHeight - epsilon;
 
                     if ((scrollUp && atTop) || (scrollDown && atBottom))
                     {
@@ -136,6 +137,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 }
             }
         }
+
 
         private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
