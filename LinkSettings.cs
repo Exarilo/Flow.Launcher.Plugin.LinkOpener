@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Flow.Launcher.Plugin.LinkOpener
 {
@@ -106,6 +107,48 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 }
             }
             catch { }
+        }
+
+        private void DataGrid_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (sender is DataGrid dg)
+            {
+                var sv = FindVisualChild<ScrollViewer>(dg);
+                if (sv != null)
+                {
+                    bool scrollUp = e.Delta > 0;
+                    bool scrollDown = e.Delta < 0;
+
+                    bool atTop = sv.VerticalOffset == 0;
+                    bool atBottom = sv.VerticalOffset >= sv.ScrollableHeight;
+
+                    if ((scrollUp && atTop) || (scrollDown && atBottom))
+                    {
+                        e.Handled = true;
+                        var parentEvent = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+                        {
+                            RoutedEvent = MouseWheelEvent,
+                            Source = sender
+                        };
+                        if (dg.Parent is UIElement parent)
+                            parent.RaiseEvent(parentEvent);
+                    }
+                }
+            }
+        }
+
+        private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T t)
+                    return t;
+                var result = FindVisualChild<T>(child);
+                if (result != null)
+                    return result;
+            }
+            return null;
         }
         private void OnDefaultDelimiterChanged(object sender, TextChangedEventArgs e)
         {

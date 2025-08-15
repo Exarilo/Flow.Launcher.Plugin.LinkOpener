@@ -78,6 +78,7 @@
                         CornerRadius="5">
                         <DataGrid
                             x:Name="dataGrid"
+                            PreviewMouseWheel="DataGrid_PreviewMouseWheel"
                             Height="400"
                             HorizontalAlignment="Stretch"
                             AutoGenerateColumns="False"
