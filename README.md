@@ -12,3 +12,5 @@ https://github.com/user-attachments/assets/ba119ed4-a045-4e84-a09c-6345b4abdd8b
 - Add the ability to set a keyword/URL directly, without needing to navigate through the settings
 - Check compatibility with portable mode
 - Sort in settings keywords alphabetically
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I3I71MHY6B)
