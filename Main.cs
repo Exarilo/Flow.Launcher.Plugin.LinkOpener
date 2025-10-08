@@ -1,8 +1,11 @@
+using Flow.Launcher.Plugin.SharedCommands;
 using Quickenshtein;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -21,7 +24,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
         PlaceholderWithDelimiter
     }
 
-    public class LinkOpener : IAsyncPlugin, ISettingProvider
+    public class LinkOpener : IAsyncPlugin, ISettingProvider, IContextMenu
     {
         private ObservableCollection<SettingItem> settingsItems;
         internal PluginInitContext Context;
@@ -50,7 +53,72 @@ namespace Flow.Launcher.Plugin.LinkOpener
         {
             Context = context;
             await LoadSettingsAsync().ConfigureAwait(false);
+
         }
+
+        public List<Result> LoadContextMenus(Result selectedResult)
+        {
+            var contextMenus = new List<Result>();
+
+            string settingsPath = Path.Combine(
+                Path.GetDirectoryName(Path.GetDirectoryName(Context.CurrentPluginMetadata.PluginDirectory)),
+                "Settings", "Settings.json"
+            );
+
+            var jsonData = File.ReadAllText(settingsPath);
+            var settings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonData);
+
+            int index = settings["CustomBrowserIndex"].GetInt32();
+            var browsers = settings["CustomBrowserList"].EnumerateArray().ToArray();
+
+            if (index < 0 || index >= browsers.Length)
+                index = 0;
+
+            string browserPath = browsers[index].GetProperty("Path").GetString() ?? "";
+
+            if (selectedResult?.ContextData is string url && Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                contextMenus.Add(new Result
+                {
+                    Title = "New window",
+                    Action = _ =>
+                    {
+                        SearchWeb.OpenInBrowserWindow(url, browserPath: browserPath, inPrivate: false);
+                        return true;
+                    },
+                    IcoPath = "Images\\OpenInNewWindow.png",
+                });
+
+
+                contextMenus.Add(new Result
+                {
+                    Title = "Private mode",
+                    Action = _ => TryOpenUrl(uri, isPrivateMode: true),
+                    IcoPath = "Images\\OpenInPrivate.png",
+                });
+
+                contextMenus.Add(new Result
+                {
+                    Title = "Copy URL",
+                    Action = _ =>
+                    {
+                        try
+                        {
+                            System.Windows.Clipboard.SetText(url);
+                            return true;
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    },
+                    IcoPath = "Images\\Copy.png",
+                });
+            }
+
+            return contextMenus;
+        }
+
 
         private async Task LoadSettingsAsync()
         {
