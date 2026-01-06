@@ -28,6 +28,8 @@ namespace Flow.Launcher.Plugin.LinkOpener
     {
         private ObservableCollection<SettingItem> settingsItems;
         internal PluginInitContext Context;
+        private const int ARGUMENT_MATCH_BONUS = 500;
+        private const int ARGUMENT_MISMATCH_PENALTY = 100;
         private const int BASE_SCORE = 1000;
         private const int BULK_SCORE = 10000;
         private const int SIMILARITY_MULTIPLIER = 50;
@@ -169,7 +171,17 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return results;
         }
 
-        private static IEnumerable<SettingItem> ProcessSettingItems(
+        private static (SettingItem, int) ProcessNoPlaceholder(SettingItem item, string fullSearch)
+        {
+            var clone = item.Clone();
+            var remaining = fullSearch.Substring(item.Keyword.Length).Trim();
+            int diff = string.IsNullOrEmpty(remaining) ? 0 : 1;
+            int score = (diff == 0) ? ARGUMENT_MATCH_BONUS : -diff * ARGUMENT_MISMATCH_PENALTY;
+
+            return (clone, score);
+        }
+
+        private static IEnumerable<(SettingItem, int)> ProcessSettingItems(
             ILookup<SettingMatchType, SettingItem> settingsByMatchType,
             string fullSearch)
         {
@@ -179,22 +191,38 @@ namespace Flow.Launcher.Plugin.LinkOpener
             var cleanedUpPlaceholderItems = settingsByMatchType[SettingMatchType.PlaceholderWithoutDelimiter]
                 .Select(ProcessPlaceholderWithoutDelimiter);
 
-            return settingsByMatchType[SettingMatchType.NoPlaceholder]
+            var noPlaceholderItems = settingsByMatchType[SettingMatchType.NoPlaceholder]
+                .Select(item => ProcessNoPlaceholder(item, fullSearch));
+
+            return noPlaceholderItems
                 .Concat(cleanedUpPlaceholderItems)
                 .Concat(updatedItems);
         }
 
-        private static SettingItem ProcessPlaceholderWithDelimiter(SettingItem match, string fullSearch)
+        private static (SettingItem, int) ProcessPlaceholderWithDelimiter(SettingItem match, string fullSearch)
         {
             var clone = match.Clone();
             var remainingSearch = fullSearch.Substring(match.Keyword.Length).Trim();
 
             var parts = ExtractParts(remainingSearch, match);
+            int diff = Math.Abs(UrlUpdater.CountPlaceholdersUsed(match.Url) - parts.Length);
+            int score = (diff == 0) ? ARGUMENT_MATCH_BONUS : -diff * ARGUMENT_MISMATCH_PENALTY;
+
             clone.Url = UrlUpdater.UpdateUrl(match.Url, parts)?.AbsoluteUri;
 
-            return clone;
+            return (clone, score);
         }
 
+        private static (SettingItem, int) ProcessPlaceholderWithoutDelimiter(SettingItem item)
+        {
+            var clone = item.Clone();
+            int expected = UrlUpdater.CountPlaceholdersUsed(item.Url);
+            
+            int score = -expected * ARGUMENT_MISMATCH_PENALTY;
+
+            clone.Url = UrlUpdater.UpdateUrl(clone.Url, Array.Empty<string>())?.AbsoluteUri;
+            return (clone, score);
+        }
         private static string[] ExtractParts(string remainingSearch, SettingItem match)
         {
             var placeholderCount = UrlUpdater.CountPlaceholdersUsed(match.Url);
@@ -215,18 +243,12 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 .ToArray();
         }
 
-        private static SettingItem ProcessPlaceholderWithoutDelimiter(SettingItem item)
-        {
-            var clone = item.Clone();
-            clone.Url = UrlUpdater.UpdateUrl(clone.Url, Array.Empty<string>())?.AbsoluteUri;
-            return clone;
-        }
-
-        private async Task<List<Result>> CreateResultsAsync(IEnumerable<SettingItem> finalItems, string fullSearch, CancellationToken token)
+        private async Task<List<Result>> CreateResultsAsync(IEnumerable<(SettingItem, int)> finalItems, string fullSearch, CancellationToken token)
         {
             var semaphore = new SemaphoreSlim(10, 10);
-            var tasks = finalItems.Select(async item =>
+            var tasks = finalItems.Select(async pair =>
             {
+                var (item, score) = pair;
                 if (token.IsCancellationRequested)
                     return null;
 
@@ -234,7 +256,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
                 try
                 {
                     return Uri.TryCreate(item.Url, UriKind.Absolute, out _)
-                        ? await CreateResultAsync(item, fullSearch, token).ConfigureAwait(false)
+                        ? await CreateResultAsync(item, fullSearch, score, token).ConfigureAwait(false)
                         : null;
                 }
                 finally
@@ -247,9 +269,9 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return results.Where(r => r != null).ToList();
         }
 
-        private void AddBulkResultIfNeeded(List<Result> results, IEnumerable<SettingItem> processedItems, string fullSearch)
+        private void AddBulkResultIfNeeded(List<Result> results, IEnumerable<(SettingItem, int)> processedItems, string fullSearch)
         {
-            var itemsToBulkOpen = processedItems.Where(x => x.AddToBulkOpenUrls).ToList();
+            var itemsToBulkOpen = processedItems.Select(x => x.Item1).Where(x => x.AddToBulkOpenUrls).ToList();
             if (itemsToBulkOpen.Count <= 1) return;
 
             var bulkResult = CreateBulkOpenResult(fullSearch, itemsToBulkOpen);
@@ -257,13 +279,13 @@ namespace Flow.Launcher.Plugin.LinkOpener
             results.Add(bulkResult);
         }
 
-        public async Task<Result> CreateResultAsync(SettingItem settingItem, string fullSearch, CancellationToken token = default)
+        public async Task<Result> CreateResultAsync(SettingItem settingItem, string fullSearch, int argumentScore, CancellationToken token = default)
         {
             if (settingItem?.Url == null || !Uri.TryCreate(settingItem.Url, UriKind.Absolute, out var uri))
                 return null;
 
             var iconPath = await GetIconPathAsync(settingItem, uri, token).ConfigureAwait(false);
-            var score = CalculateScore(settingItem, fullSearch);
+            var score = CalculateScore(settingItem, fullSearch, argumentScore);
 
             return new Result
             {
@@ -293,7 +315,7 @@ namespace Flow.Launcher.Plugin.LinkOpener
             return iconPath;
         }
 
-        private static int CalculateScore(SettingItem settingItem, string fullSearch)
+        private static int CalculateScore(SettingItem settingItem, string fullSearch, int argumentScore)
         {
             var searchAfterKeyword = fullSearch.Length >= settingItem.Keyword.Length
                 ? fullSearch.Substring(settingItem.Keyword.Length).Trim()
@@ -302,15 +324,18 @@ namespace Flow.Launcher.Plugin.LinkOpener
             var titleLower = settingItem.Title.ToLower();
             var minLength = Math.Min(searchAfterKeyword.Length, titleLower.Length);
 
-            if (minLength == 0)
-                return BASE_SCORE;
+            int score = BASE_SCORE;
 
-            var distance = Levenshtein.GetDistance(
-                searchAfterKeyword.AsSpan(0, minLength),
-                titleLower.AsSpan(0, minLength)
-            );
+            if (minLength > 0)
+            {
+                var distance = Levenshtein.GetDistance(
+                    searchAfterKeyword.AsSpan(0, minLength),
+                    titleLower.AsSpan(0, minLength)
+                );
+                score += (minLength - distance) * SIMILARITY_MULTIPLIER;
+            }
 
-            return BASE_SCORE + (minLength - distance) * SIMILARITY_MULTIPLIER;
+            return score + argumentScore;
         }
 
         private bool TryOpenUrl(Uri uri, bool isPrivateMode)
